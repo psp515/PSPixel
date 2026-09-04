@@ -95,6 +95,12 @@
         <label class="field"><span>Data pin</span>
           <input type="number" min="0" data-key="leds.pin">
         </label>
+        <label class="field"><span>Protocol</span>
+          <select data-key="leds.protocol">
+            <option value="ws2812">WS2812B (5V)</option>
+            <option value="ws2811">WS2811 (12V)</option>
+          </select>
+        </label>
         <label class="field"><span>On after boot</span>
           <input type="checkbox" data-key="leds.on_after_boot">
         </label>

@@ -10,6 +10,7 @@ MODE_DIRECTIONS = ("forward", "backward")
 DEFAULT_MODES = ("normal", "mqtt-ssl")
 SEGMENT_LENGTH_MIN = 2
 LEDS_COUNT_MIN = 1
+LEDS_PROTOCOLS = ("ws2812", "ws2811")
 
 try:
     import binascii
@@ -65,6 +66,10 @@ def _validate_leds(data, leds_patch, logger):
             del leds_patch["count"]
         elif count < LEDS_COUNT_MIN:
             leds_patch["count"] = LEDS_COUNT_MIN
+    if "protocol" in leds_patch and leds_patch["protocol"] not in LEDS_PROTOCOLS:
+        if logger:
+            logger.warning("state", "invalid leds protocol {0}, ignoring", leds_patch["protocol"])
+        del leds_patch["protocol"]
     if isinstance(leds_patch.get("segmenting"), dict):
         segmenting_patch = dict(leds_patch["segmenting"])
         length = segmenting_patch.get("length")

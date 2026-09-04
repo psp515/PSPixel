@@ -123,9 +123,10 @@ if "neopixel" not in sys.modules:
     neopixel_stub = types.ModuleType("neopixel")
 
     class _NeoPixelStub:
-        def __init__(self, pin, n, bpp=3):
+        def __init__(self, pin, n, bpp=3, timing=0):
             self.pin = pin
             self.n = n
+            self.timing = timing
             self.buf = bytearray(n * bpp)
 
         def write(self):

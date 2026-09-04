@@ -3,6 +3,7 @@ DEFAULTS = {
     "leds": {
         "count": 144,
         "pin": 0,
+        "protocol": "ws2812",
         "on_after_boot": True,
         "segmenting": {"enabled": False, "length": 2},
     },

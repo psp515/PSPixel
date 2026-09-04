@@ -5,11 +5,12 @@ from renderer import Renderer, SEGMENT_LENGTH_MIN
 from state import StateManager
 
 
-def make_renderer(count=12, segmenting=None, mode_current="rainbow"):
+def make_renderer(count=12, segmenting=None, mode_current="rainbow", protocol="ws2812"):
     data = {
         "leds": {
             "count": count,
             "pin": 0,
+            "protocol": protocol,
             "segmenting": segmenting or {"enabled": False, "length": 2},
         },
         "mode": {
@@ -149,3 +150,33 @@ def test_start_resizes_pixel_buffer_when_leds_count_changes():
     assert renderer.count == 10
     assert renderer.np.n == 10
     assert len(renderer.np.buf) == 30
+
+
+def test_renderer_uses_ws2811_timing_from_config():
+    renderer, _ = make_renderer(count=6, protocol="ws2811")
+    assert renderer.np.timing == 1
+
+
+def test_renderer_uses_ws2812_timing_by_default():
+    renderer, _ = make_renderer(count=6, protocol="ws2812")
+    assert renderer.np.timing == 0
+
+
+def test_start_reconfigures_strip_when_leds_protocol_changes():
+    renderer, state = make_renderer(count=6, mode_current="rainbow", protocol="ws2812")
+
+    async def run_two_frames():
+        task = asyncio.create_task(renderer.start())
+        await asyncio.sleep(0.01)
+        state.update({"leds": {"protocol": "ws2811"}})
+        await asyncio.sleep(0.08)
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+    asyncio.run(run_two_frames())
+
+    assert renderer.protocol == "ws2811"
+    assert renderer.np.timing == 1

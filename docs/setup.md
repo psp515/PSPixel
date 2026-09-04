@@ -39,7 +39,7 @@ is optional. Here's that minimal example:
 
 | Function             | Default Pico W pin | Config key    | Notes                                   |
 |-----------------------|-----------|---------------|------------------------------------------|
-| WS2812B data          | `GP0`     | `leds.pin`    | Required                                  |
+| LED data              | `GP0`     | `leds.pin`    | Required; strip type set in `leds.protocol` |
 | Push button (cover)   | `GP3`     | `button.pin`  | Optional, active-low, internal pull-up    |
 
 ### WS2812B LED strip
@@ -62,6 +62,22 @@ is optional. Here's that minimal example:
   pixel, and a ~300-500Ω resistor in series on the data line, per the usual
   WS2812B best practices — both reduce power-on glitches and ringing on the
   data line.
+
+### WS2811 LED strip (12V)
+
+- Set `leds.protocol: "ws2811"` in `config.json` (default is `"ws2812"`) —
+  this is a live setting, no reboot needed.
+- The strip is typically **12V power** with a separate WS2811 IC per LED
+  (or per group of LEDs), while data logic stays low-voltage.
+- Unlike WS2812B, a level shifter between `GP0` and the strip's data-in is
+  **required**, not optional — 12V-rail strips need a clean logic-high well
+  above the 3.3V a bare GPIO provides. Use a dedicated non-inverting buffer
+  (e.g. 74AHCT125/74HCT245); a bidirectional shifter meant for slow buses
+  (e.g. BSS138 modules) is too slow for WS2811 timing and causes flicker or
+  wrong colors.
+- Ground and power-budget rules are the same as WS2812B above: common ground
+  between the Pico W, the level shifter, and the strip's supply; power the
+  strip from its own supply, never from the Pico.
 
 ### Push button (optional)
 

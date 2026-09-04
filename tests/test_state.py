@@ -176,6 +176,22 @@ def test_update_ignores_non_numeric_leds_count():
     assert state.get("leds", "count") == 8
 
 
+def test_update_allows_valid_leds_protocol():
+    state = StateManager({"leds": {"count": 8, "pin": 0, "protocol": "ws2812"}})
+
+    state.update({"leds": {"protocol": "ws2811"}})
+
+    assert state.get("leds", "protocol") == "ws2811"
+
+
+def test_update_ignores_invalid_leds_protocol():
+    state = StateManager({"leds": {"count": 8, "pin": 0, "protocol": "ws2812"}})
+
+    state.update({"leds": {"protocol": "sk6812"}})
+
+    assert state.get("leds", "protocol") == "ws2812"
+
+
 def test_validate_mode_drops_unknown_current_in_isolation():
     data = {"modes": {"static": {}, "rainbow": {}}}
 

@@ -7,6 +7,7 @@ from animations.off import Off
 from animations.registry import MODES
 
 SEGMENT_LENGTH_MIN = 2
+PROTOCOL_TIMING = {"ws2812": 0, "ws2811": 1}
 
 
 class Renderer:
@@ -14,20 +15,30 @@ class Renderer:
         self.state = state
         self.logger = logger
         self.count = state["leds"]["count"]
+        self.protocol = state.get("leds", "protocol", default="ws2812")
         pin = state.get("leds", "pin", default=0)
         self._pin = machine.Pin(pin)
-        self.np = neopixel.NeoPixel(self._pin, self.count)
+        self.np = self._make_strip(self.count, self.protocol)
         self._reload = True
         state.subscribe(self._on_change)
-        self.logger.info("renderer", "leds count {0} pin {1}", self.count, pin)
+        self.logger.info(
+            "renderer", "leds count {0} pin {1} protocol {2}", self.count, pin, self.protocol
+        )
+
+    def _make_strip(self, count, protocol):
+        timing = PROTOCOL_TIMING.get(protocol, 0)
+        return neopixel.NeoPixel(self._pin, count, timing=timing)
 
     def _on_change(self, patch):
         self._reload = True
 
-    def _resize(self, count):
-        self.np = neopixel.NeoPixel(self._pin, count)
+    def _resize(self, count, protocol):
+        self.np = self._make_strip(count, protocol)
         self.count = count
-        self.logger.info("renderer", "leds count changed to {0}", count)
+        self.protocol = protocol
+        self.logger.info(
+            "renderer", "leds reconfigured count {0} protocol {1}", count, protocol
+        )
 
     def _mode_name(self):
         name = self.state.mode.current if self.state.mode.on else "off"
@@ -95,8 +106,9 @@ class Renderer:
         frame = 0
         while True:
             new_count = self.state.get("leds", "count", default=self.count)
-            if new_count != self.count:
-                self._resize(new_count)
+            new_protocol = self.state.get("leds", "protocol", default=self.protocol)
+            if new_count != self.count or new_protocol != self.protocol:
+                self._resize(new_count, new_protocol)
                 self._reload = True
             if self._reload:
                 self._reload = False

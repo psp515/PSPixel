@@ -6,7 +6,8 @@ It is a MicroPython ARGB LED Controller.
 
 ### Current
 
-- primarly it is designed to handle WS2812B LED 5V
+- primarly it is designed to handle WS2812B LED 5V, also supports WS2811 LED
+  12V (`leds.protocol` config key, see [Configuration](#configuration))
 - Available communication protocols for configuration
   - NEC Reveiver
   - Button on the cover
@@ -48,7 +49,6 @@ It is a MicroPython ARGB LED Controller.
 ### Future directions
 
 If introducing helpfull abstraction will not be problematic it is advised to apply this abstraction.
-- in future there will be more like WS2811 LED 12V support
 - introducing more modes 
 
 ### Selected Libraries 
@@ -61,7 +61,10 @@ If introducing helpfull abstraction will not be problematic it is advised to app
 ### Current
 
 - Board: Raspberry Pi Pico W
-- WS2812B data line: GP0 
+- LED data line: GP0, WS2812B (5V) or WS2811 (12V) selected via `leds.protocol`
+  (`config.json`) — WS2811 needs a non-inverting level shifter (e.g.
+  74AHCT125) between GP0 and the strip's data-in, WS2812B works direct from
+  the 3.3V GPIO for short runs
 - Optional - IR receiver (NEC protocol, remote control): GP2, interrupt-driven
 - Optional - Push button (on cover): GP3, active low, internal pull-up, debounced in software
 - LED count: 144 default, configurable in `config.json`

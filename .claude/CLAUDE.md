@@ -263,9 +263,24 @@ CPython/Node, not on-device.
 - Firmware is resolved from the selected ref's own `MICROPYTHON_VERSION`
   file only; a ref from before that file existed falls back to the hardcoded
   `v1.29.0` `DEFAULT_FIRMWARE_URL` in `const.js` (`app.js`'s
-  `resolveFirmwareUrl`) — never to another ref's pin. Bump that constant by
+  `resolveFirmwarePin`) — never to another ref's pin. Bump that constant by
   hand alongside the repo-root `MICROPYTHON_VERSION` file so it doesn't
   drift.
+- The firmware `.uf2` is written straight to flash, so its URL must start
+  with `FIRMWARE_URL_PREFIX` (`https://micropython.org/resources/firmware/`,
+  in `const.js`) — a pin pointing anywhere else is a hard error, never a
+  fallback (`source.js`'s `assertAllowedFirmwareUrl`, re-checked in `app.js`
+  before flashing). `MICROPYTHON_VERSION` may carry an optional second field
+  (whitespace-separated): a SHA-256 hex digest of the `.uf2`, verified
+  against the download before `flashUf2` (`source.js`'s `parseFirmwarePin`).
+- Every file pushed over the REPL (source files, `config.json`, the
+  certificate) is verified by reading it back on-device and comparing a
+  `hashlib.sha256` digest to the bytes that were sent (`repl.js`'s
+  `pushBundle`) — not just a size check.
+- Certificate filenames must match `^[A-Za-z0-9._-]{1,64}$` and not be
+  `.`/`..` (`repl.js`'s `isValidCertName`, mirrored by
+  `src/channels/webapi.py`'s `_valid_cert_name`) — they become a device path
+  and a Python string literal.
 - Everything the installer needs is fetched from GitHub at the selected ref.
   There is **no local/offline install path** and no build or release step —
   nothing to run before tagging, nothing to publish after. To test
@@ -273,11 +288,13 @@ CPython/Node, not on-device.
   Branch*.
 - All hardcoded endpoints, ids and limits live in `docs/installer/const.js`
   (`OWNER`/`REPO`, GitHub API + raw bases with the `apiUrl`/`rawUrl`
-  builders, `DEFAULT_FIRMWARE_URL`, USB vendor/product ids, `CERT_MAX_BYTES`,
-  `DEFAULT_BRANCH`) — no URL literals in the other modules.
-- `MICROPYTHON_VERSION` (repo root) pins the exact firmware `.uf2` URL. Bump
-  it deliberately — the installer reads it straight from the selected ref for
-  every version, live.
+  builders, `DEFAULT_FIRMWARE_URL`, `FIRMWARE_URL_PREFIX`, USB vendor/product
+  ids, `CERT_MAX_BYTES`, `DEFAULT_BRANCH`) — no URL literals in the other
+  modules.
+- `MICROPYTHON_VERSION` (repo root) pins the exact firmware `.uf2` URL, with
+  an optional whitespace-separated SHA-256 of that file. Bump it deliberately
+  — the installer reads it straight from the selected ref for every version,
+  live.
 - Installer flow: WebUSB PICOBOOT flash (`picoboot.js`/`uf2.js`) with a
   drag-`.uf2` fallback → Web Serial raw-REPL file push (`repl.js`) → write
   `config.json` from the form → reboot. See `docs/development.md`.

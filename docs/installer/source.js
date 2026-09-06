@@ -1,4 +1,4 @@
-import { DEFAULT_BRANCH, apiUrl, rawUrl } from "./const.js";
+import { DEFAULT_BRANCH, FIRMWARE_URL_PREFIX, apiUrl, rawUrl } from "./const.js";
 import { toBase64 } from "./net.js";
 
 // Assembles the device file set ({dirs, files}) straight from a git ref (a
@@ -53,10 +53,30 @@ export async function fetchBranchList() {
   return orderBranches(branches.map((branch) => branch.name));
 }
 
-export async function fetchFirmwareUrl(ref) {
+export function assertAllowedFirmwareUrl(url) {
+  if (!url.startsWith(FIRMWARE_URL_PREFIX)) {
+    throw new Error(`firmware URL not under ${FIRMWARE_URL_PREFIX}: ${url}`);
+  }
+}
+
+// MICROPYTHON_VERSION is the firmware .uf2 URL, optionally followed by
+// whitespace/newline and a SHA-256 hex digest of that file. The URL is
+// checked against the official-download allowlist; the digest, when present,
+// is verified against the downloaded bytes before anything is flashed.
+export function parseFirmwarePin(text) {
+  const [url, sha256] = text.trim().split(/\s+/);
+  if (!url) throw new Error("MICROPYTHON_VERSION is empty");
+  assertAllowedFirmwareUrl(url);
+  if (sha256 !== undefined && !/^[0-9a-f]{64}$/i.test(sha256)) {
+    throw new Error(`MICROPYTHON_VERSION second field is not a SHA-256 hex digest: ${sha256}`);
+  }
+  return { url, sha256: sha256 ? sha256.toLowerCase() : null };
+}
+
+export async function fetchFirmwarePin(ref) {
   const response = await fetch(rawUrl(ref, "MICROPYTHON_VERSION"));
   if (!response.ok) throw new Error(`no MICROPYTHON_VERSION pin at ${ref}`);
-  return (await response.text()).trim();
+  return parseFirmwarePin(await response.text());
 }
 
 export async function fetchSource(ref, onProgress = () => {}) {

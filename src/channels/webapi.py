@@ -14,6 +14,13 @@ WIFI_POLL_MS = 500
 PORT = 80
 RESTART_DELAY_MS = 300
 CERT_MAX_BYTES = 16 * 1024
+CERT_NAME_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
+
+
+def _valid_cert_name(name):
+    if not name or len(name) > 64 or name in (".", ".."):
+        return False
+    return all(c in CERT_NAME_CHARS for c in name)
 
 
 class WebApiChannel(Channel):
@@ -51,7 +58,7 @@ class WebApiChannel(Channel):
 
     async def _handle_certificate_upload(self, request):
         name = request.args.get("name", "")
-        if not name or "/" in name or "\\" in name:
+        if not _valid_cert_name(name):
             return {"error": "invalid filename"}, 400
         body = request.body
         if not body:

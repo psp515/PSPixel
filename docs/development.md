@@ -246,13 +246,25 @@ up. Everything is fetched from GitHub; there is no local/offline install
 path.
 
 Firmware comes from `MICROPYTHON_VERSION` read at the selected ref
-(`fetchFirmwareUrl`) and nowhere else — a ref cut before that file existed
+(`fetchFirmwarePin`) and nowhere else — a ref cut before that file existed
 falls back straight to `DEFAULT_FIRMWARE_URL`, a hardcoded `v1.29.0` URL in
 `const.js` bumped by hand alongside the repo-root `MICROPYTHON_VERSION`
 file, so an old tag always resolves to *something* installable
-(`resolveFirmwareUrl` in `app.js`, the fallback logged as a note). No other
+(`resolveFirmwarePin` in `app.js`, the fallback logged as a note). No other
 ref's pin is ever borrowed: what you install is either that ref's own pin or
-the installer default. Every ref pre-fills the config
+the installer default.
+
+Because the `.uf2` is written straight to flash, the pin's URL must start
+with `FIRMWARE_URL_PREFIX` (`https://micropython.org/resources/firmware/`) —
+a URL anywhere else is a hard error, not a fallback
+(`assertAllowedFirmwareUrl` in `source.js`, re-checked in `app.js` right
+before `flashUf2`). `MICROPYTHON_VERSION` may hold a second
+whitespace-separated field, a SHA-256 hex digest of the `.uf2`; when present
+it's checked against the download (`sha256Hex` in `net.js`) before anything
+is flashed. `parseUf2` also drops any block whose declared payload size is
+larger than the 476-byte UF2 data area.
+
+Every ref pre-fills the config
 form from `FALLBACK_DEFAULTS`, a small hardcoded object in `app.js`
 mirroring `DEFAULTS`' installer-relevant fields — there's no `defaults.json`
 to fetch anywhere.
@@ -280,17 +292,18 @@ runs before a tag exists, nothing gets published after. Picking a tag or
 | Module | Responsibility |
 |---|---|
 | `const.js` | every hardcoded endpoint, id and limit: `OWNER`/`REPO`, the GitHub API/raw bases and their `apiUrl`/`rawUrl` builders, `DEFAULT_FIRMWARE_URL`, the USB vendor/product ids, `CERT_MAX_BYTES`, `DEFAULT_BRANCH` |
-| `source.js` | lists tags (`fetchTagList`) and branches (`fetchBranchList`/`orderBranches`), resolves a ref's firmware pin (`fetchFirmwareUrl`), and assembles the `{dirs, files}` bundle object straight from any git ref (`fetchSource`) via the GitHub tree + raw file API |
-| `net.js` | the generic `fetchBinary` and `toBase64` helpers |
+| `source.js` | lists tags (`fetchTagList`) and branches (`fetchBranchList`/`orderBranches`), resolves and validates a ref's firmware pin (`fetchFirmwarePin`/`parseFirmwarePin`/`assertAllowedFirmwareUrl`), and assembles the `{dirs, files}` bundle object straight from any git ref (`fetchSource`) via the GitHub tree + raw file API |
+| `net.js` | the generic `fetchBinary`, `toBase64`/`fromBase64` and `sha256Hex` helpers |
 | `uf2.js` | parse a `.uf2` into coalesced `{addr, bytes}` flash runs (RP2040 family only) |
 | `picoboot.js` | WebUSB PICOBOOT client — `EXCLUSIVE_ACCESS` / `EXIT_XIP` / `FLASH_ERASE` / `WRITE` / `REBOOT` in 4 KB sectors |
-| `repl.js` | Web Serial raw-REPL: enter raw mode, `exec()` a snippet, then push each file in ~1 KB base64 chunks via `ubinascii.a2b_base64`, verifying size with `os.stat` |
+| `repl.js` | Web Serial raw-REPL: enter raw mode, `exec()` a snippet, then push each file in ~1 KB base64 chunks via `ubinascii.a2b_base64`, verifying each by reading it back and comparing an on-device `hashlib.sha256` digest; also `isValidCertName` |
 | `app.js` | wires the version picker, the four wizard steps, per-step status, the progress bars, and the log |
 
-`uf2.js`, `dirsFor`/`isDeviceFile` in `source.js`, and `splitB64` in
-`repl.js` are pure and unit-tested (`tests/installer/*.test.mjs`, run with
-`node --test`). The USB/serial paths and the live GitHub fetch need real
-hardware/network and aren't covered by CI — test them against a board.
+`uf2.js`, `dirsFor`/`isDeviceFile`/`parseFirmwarePin`/`assertAllowedFirmwareUrl`
+in `source.js`, and `splitB64`/`isValidCertName` in `repl.js` are pure and
+unit-tested (`tests/installer/*.test.mjs`, run with `node --test`). The
+USB/serial paths and the live GitHub fetch need real hardware/network and
+aren't covered by CI — test them against a board.
 
 ### Testing the page locally
 
@@ -342,7 +355,10 @@ On install, `app.js`'s `readCertFile()` reads it into base64; `pushBundle()`
 `certs/<filename>` alongside the other files, and `configJson()` sets
 `mqtt.certificate.name` to that filename — the same file
 `_certificate_disabled_reason()` in `src/channels/mqtt.py` checks for at
-connect time.
+connect time. The filename must match `^[A-Za-z0-9._-]{1,64}$` and not be
+`.`/`..` (`isValidCertName` in `repl.js`, checked in `readCertFile()`,
+`isConfigValid()` and `pushBundle()`) — the device side enforces the same
+rule in `_valid_cert_name()` (`src/channels/webapi.py`).
 
 **Wi-Fi scan**: the *Scan for networks* button runs a raw REPL snippet
 (`import network; ...WLAN(STA_IF).scan()...`) over the already-open step-2

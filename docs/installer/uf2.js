@@ -18,6 +18,7 @@ export function parseUf2(buffer) {
     const flags = view.getUint32(offset + 8, true);
     const addr = view.getUint32(offset + 12, true);
     const payloadSize = view.getUint32(offset + 16, true);
+    if (payloadSize > 476) continue; // a UF2 block's data area is 476 bytes; anything larger is a malformed/hostile header
     const familyId = view.getUint32(offset + 28, true);
     if (flags & FLAG_FAMILY_ID && familyId !== RP2040_FAMILY_ID) continue;
     blocks.push({ addr, data: new Uint8Array(buffer, offset + 32, payloadSize) });

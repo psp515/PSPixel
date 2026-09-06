@@ -51,7 +51,9 @@ Prefer to do it by hand, or want to understand every step? See
    networks* to fill in nearby Wi-Fi names to pick from — you can still type
    any name by hand. If you turn on MQTT certificate validation, a drop
    zone appears — drag a certificate file in or click to browse, and it's
-   uploaded onto the device along with everything else in step 4.
+   uploaded onto the device along with everything else in step 4. Its
+   filename may use only letters, digits, dots, dashes and underscores
+   (up to 64 characters).
 4. **Install.** The installer copies the controller onto the board, writes your
    settings, and reboots it. The strip lights up on the persisted mode.
 

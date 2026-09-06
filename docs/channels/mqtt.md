@@ -138,7 +138,8 @@ By default MQTT is unencrypted. Two settings tighten this:
   section of `/config` (**Upload certificate**) — it's saved
   under its filename, which then appears in the **Certificate name** dropdown
   next to the other certificates already on the device; no manual file
-  transfer needed.
+  transfer needed. The filename may use only letters, digits, dots, dashes
+  and underscores (up to 64 characters).
 
 When certificate checking is on but the certificate is missing or unreadable,
 the device refuses to connect rather than falling back to an unverified

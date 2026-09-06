@@ -1,5 +1,11 @@
 import { USB_VENDOR_ID } from "./const.js";
-import { toBase64 } from "./net.js";
+import { fromBase64, sha256Hex, toBase64 } from "./net.js";
+
+// Certificate names become a device path (certs/<name>) and a Python string
+// literal - keep them to a plain basename charset, no ".", ".." or traversal.
+export function isValidCertName(name) {
+  return /^[A-Za-z0-9._-]{1,64}$/.test(name) && name !== "." && name !== "..";
+}
 
 export function serialSupported() {
   return typeof navigator !== "undefined" && "serial" in navigator;
@@ -133,10 +139,15 @@ export async function pushBundle(
   const configBytes = new TextEncoder().encode(configJson(form));
 
   const files = bundle.files.slice();
-  files.push({ path: "config.json", b64: toBase64(configBytes.buffer), size: null, sha256: null });
+  files.push({ path: "config.json", b64: toBase64(configBytes.buffer) });
   if (certFile) {
-    files.push({ path: `certs/${certFile.name}`, b64: certFile.b64, size: certFile.size, sha256: null });
+    if (!isValidCertName(certFile.name)) {
+      throw new Error(`invalid certificate filename: ${certFile.name}`);
+    }
+    files.push({ path: `certs/${certFile.name}`, b64: certFile.b64 });
   }
+
+  await repl.exec("import hashlib");
 
   let index = 0;
   for (const file of files) {
@@ -147,13 +158,15 @@ export async function pushBundle(
     }
     await repl.exec("_f.close()");
 
-    if (verify && file.size !== null) {
-      const size = parseInt(
-        await repl.exec(`print(os.stat(${JSON.stringify(file.path)})[6])`),
-        10
-      );
-      if (size !== file.size) {
-        throw new Error(`${file.path}: wrote ${size} bytes, expected ${file.size}`);
+    if (verify) {
+      const expected = await sha256Hex(fromBase64(file.b64));
+      const actual = (
+        await repl.exec(
+          `print(ubinascii.hexlify(hashlib.sha256(open(${JSON.stringify(file.path)},'rb').read()).digest()).decode())`
+        )
+      ).trim();
+      if (actual !== expected) {
+        throw new Error(`${file.path}: on-device hash ${actual}, expected ${expected}`);
       }
     }
     index += 1;

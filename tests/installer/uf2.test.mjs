@@ -65,3 +65,16 @@ test("ignores blocks from other chip families", () => {
 test("rejects a buffer with no valid blocks", () => {
   assert.throws(() => parseUf2(new ArrayBuffer(512)));
 });
+
+test("ignores a block whose declared payload size exceeds the 476-byte data area", () => {
+  const buffer = new ArrayBuffer(512);
+  const view = new DataView(buffer);
+  view.setUint32(0, MAGIC_START0, true);
+  view.setUint32(4, MAGIC_START1, true);
+  view.setUint32(8, FLAG_FAMILY_ID, true);
+  view.setUint32(12, 0x10000000, true);
+  view.setUint32(16, 999, true); // bogus / hostile payload size
+  view.setUint32(28, RP2040_FAMILY_ID, true);
+  view.setUint32(508, MAGIC_END, true);
+  assert.throws(() => parseUf2(buffer), /no RP2040 blocks/);
+});

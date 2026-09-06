@@ -12,6 +12,11 @@ export const GITHUB_RAW = "https://raw.githubusercontent.com";
 export const DEFAULT_FIRMWARE_URL =
   "https://micropython.org/resources/firmware/RPI_PICO_W-20260824-v1.29.0.uf2";
 
+// A firmware .uf2 is written straight to the board's flash - only accept URLs
+// under the official MicroPython download path (a compromised branch, token or
+// tricked user can otherwise point MICROPYTHON_VERSION at any host).
+export const FIRMWARE_URL_PREFIX = "https://micropython.org/resources/firmware/";
+
 export const USB_VENDOR_ID = 0x2e8a;
 export const USB_PRODUCT_ID = 0x0003;
 

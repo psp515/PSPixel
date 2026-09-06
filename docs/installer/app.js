@@ -1,8 +1,8 @@
-import { fetchTagList, fetchBranchList, fetchFirmwareUrl, fetchSource } from "./source.js";
-import { fetchBinary, toBase64 } from "./net.js";
+import { fetchTagList, fetchBranchList, fetchFirmwarePin, fetchSource, assertAllowedFirmwareUrl } from "./source.js";
+import { fetchBinary, sha256Hex, toBase64 } from "./net.js";
 import { CERT_MAX_BYTES, DEFAULT_BRANCH, DEFAULT_FIRMWARE_URL } from "./const.js";
 import { Picoboot, requestBootDevice, webusbSupported } from "./picoboot.js";
-import { Repl, pushBundle, reboot, requestSerialPort, serialSupported, sleep } from "./repl.js";
+import { Repl, isValidCertName, pushBundle, reboot, requestSerialPort, serialSupported, sleep } from "./repl.js";
 
 const FALLBACK_DEFAULTS = {
   device: { name: "PicoController" },
@@ -105,7 +105,7 @@ stepperItems.forEach((item) => {
 renderStepper();
 
 // state.ref: git ref to install from - a release tag or a branch name.
-const state = { ref: null, bundle: null, repl: null, firmwareUrl: null };
+const state = { ref: null, bundle: null, repl: null, firmwarePin: null };
 
 function parseVersion(url) {
   const match = url && url.match(/v\d+\.\d+\.\d+/);
@@ -199,25 +199,27 @@ async function selectVersion(value) {
       : `Source: branch ${value} (development build, unreleased)`;
 
   try {
-    state.firmwareUrl = await resolveFirmwareUrl();
+    state.firmwarePin = await resolveFirmwarePin();
   } catch (error) {
-    state.firmwareUrl = null;
+    state.firmwarePin = null;
     fail(error);
   }
-  els.uf2Version.textContent = parseVersion(state.firmwareUrl) || "unknown";
+  els.uf2Version.textContent = parseVersion(state.firmwarePin && state.firmwarePin.url) || "unknown";
 
   loadDefaults();
 }
 
 // Firmware comes from the selected ref's own MICROPYTHON_VERSION pin. A ref
 // cut before that file existed has none - fall back to the installer's
-// hardcoded default rather than borrowing another ref's pin.
-async function resolveFirmwareUrl() {
+// hardcoded default rather than borrowing another ref's pin. A pin whose URL
+// isn't an official MicroPython download is a hard error, never a fallback.
+async function resolveFirmwarePin() {
   try {
-    return await fetchFirmwareUrl(state.ref);
+    return await fetchFirmwarePin(state.ref);
   } catch (error) {
+    if (error.message.includes("not under")) throw error;
     log(`  note: ${error.message} - using the installer's default firmware (${parseVersion(DEFAULT_FIRMWARE_URL)})`);
-    return DEFAULT_FIRMWARE_URL;
+    return { url: DEFAULT_FIRMWARE_URL, sha256: null };
   }
 }
 
@@ -267,13 +269,22 @@ buttons.flash.addEventListener("click", async () => {
         "driver is bound to the board's boot interface; use the drag-.uf2 fallback below instead"
     );
 
-    if (!state.firmwareUrl) throw new Error("no firmware URL resolved for this version");
+    if (!state.firmwarePin) throw new Error("no firmware pin resolved for this version");
+    assertAllowedFirmwareUrl(state.firmwarePin.url);
 
     log("Downloading firmware…");
     els.firmwareProgress.hidden = false;
-    const uf2 = await fetchBinary(state.firmwareUrl, (received, total) => {
+    const uf2 = await fetchBinary(state.firmwarePin.url, (received, total) => {
       els.firmwareProgress.value = total ? (received / total) * 50 : 0;
     });
+
+    if (state.firmwarePin.sha256) {
+      const digest = await sha256Hex(new Uint8Array(uf2));
+      if (digest !== state.firmwarePin.sha256) {
+        throw new Error(`firmware hash mismatch: expected ${state.firmwarePin.sha256}, got ${digest}`);
+      }
+      log("Firmware hash verified.");
+    }
 
     log("Writing flash…");
     await pico.flashUf2(uf2, (done, total) => {
@@ -340,6 +351,7 @@ function isConfigValid() {
   if (els.form.mqttSsl.checked && els.form.mqttCertValidate.checked) {
     const file = els.form.mqttCertFile.files[0];
     if (!file || file.size > CERT_MAX_BYTES) return false;
+    if (!isValidCertName(file.name.split(/[\\/]/).pop())) return false;
   }
   return true;
 }
@@ -464,7 +476,9 @@ function postInstallGuidance(form) {
       `opens its own setup network ("${form.apSsid}") instead.`
     );
   }
-  const passwordNote = form.apPassword ? ` (password: ${form.apPassword})` : " (open network, no password)";
+  const passwordNote = form.apPassword
+    ? " (using the AP password you set in the form)"
+    : " (open network, no password)";
   return (
     "No Wi-Fi was configured, so on this first boot the device starts up as " +
     "its own Wi-Fi access point instead of joining a network — that's " +
@@ -479,8 +493,14 @@ async function readCertFile() {
   if (file.size > CERT_MAX_BYTES) {
     throw new Error(`certificate too large (${file.size} bytes, max ${CERT_MAX_BYTES})`);
   }
+  const name = file.name.split(/[\\/]/).pop();
+  if (!isValidCertName(name)) {
+    throw new Error(
+      `certificate filename "${name}" is not allowed - use only letters, digits, dot, dash, underscore (max 64 chars)`
+    );
+  }
   const buffer = await file.arrayBuffer();
-  return { name: file.name.split(/[\\/]/).pop(), size: buffer.byteLength, b64: toBase64(buffer) };
+  return { name, size: buffer.byteLength, b64: toBase64(buffer) };
 }
 
 // Certificate dropzone: click-to-browse and drag & drop both funnel into the

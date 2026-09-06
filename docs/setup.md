@@ -1,14 +1,15 @@
 ---
 layout: default
 title: Manual setup
-nav_order: 2
+nav_order: 3
 ---
 
 # Manual setup
 
-There is no installer or build step — this is plain MicroPython. Setup is:
-wire the hardware, flash the firmware once, then copy the project's files
-onto the board.
+Most people should use the **[Web installer](installer.md)** — it does all of
+this from the browser. This page is the by-hand version: wire the hardware,
+flash the firmware once, then copy the project's files onto the board. It's
+also the reference for what the installer does under the hood.
 
 ## 1. Flash MicroPython
 

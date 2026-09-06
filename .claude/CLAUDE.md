@@ -237,12 +237,62 @@ are part of the plan too — as their own step, in the same change.
 
 ## Development
 
-Mirrors `.github/workflows/ci.yml` (lint → build → test), runs on CPython, not on-device.
+Mirrors `.github/workflows/ci.yml` (lint → build → test → installer), runs on
+CPython/Node, not on-device.
 
 - Lint: `python -m ruff check src main.py`
 - Compile-check (syntax only, all source files): `python -m compileall -q src main.py`
 - Tests: `python -m pytest` (pythonpath is `src` and `lib`, configured in `pyproject.toml`; tests live in `tests/`)
+- Installer JS: `node --test tests/installer/*.test.mjs`
 - Always invoke tools via `python -m` (`ruff`, `pytest`) — bare executables are not on PATH here.
+
+## Web installer
+
+- Browser-based flash + install for a blank Pico W, served from GitHub Pages at
+  `docs/installer/` (plain static HTML/JS, no front matter so Jekyll copies it
+  verbatim; not in the docs nav — linked from `docs/installer.md`). Chromium
+  desktop only (WebUSB + Web Serial).
+- The page's **version picker** is two dropdowns: *Install from*
+  (Released version / Branch) and the ref list itself — tags
+  (`GET /repos/.../tags`, newest first, the default) or branches
+  (`GET /repos/.../branches`, default branch first then alphabetical), with
+  the first entry preselected and an automatic fall back to branches when no
+  tags exist. Picking a ref assembles the install bundle **live** from it via
+  the GitHub API (file tree + `raw.githubusercontent.com`), so nothing needs
+  building or releasing ahead of time.
+- Firmware is resolved from the selected ref's own `MICROPYTHON_VERSION`
+  file only; a ref from before that file existed falls back to the hardcoded
+  `v1.29.0` `DEFAULT_FIRMWARE_URL` in `const.js` (`app.js`'s
+  `resolveFirmwareUrl`) — never to another ref's pin. Bump that constant by
+  hand alongside the repo-root `MICROPYTHON_VERSION` file so it doesn't
+  drift.
+- Everything the installer needs is fetched from GitHub at the selected ref.
+  There is **no local/offline install path** and no build or release step —
+  nothing to run before tagging, nothing to publish after. To test
+  uncommitted work, push it to a branch and pick it under *Install from →
+  Branch*.
+- All hardcoded endpoints, ids and limits live in `docs/installer/const.js`
+  (`OWNER`/`REPO`, GitHub API + raw bases with the `apiUrl`/`rawUrl`
+  builders, `DEFAULT_FIRMWARE_URL`, USB vendor/product ids, `CERT_MAX_BYTES`,
+  `DEFAULT_BRANCH`) — no URL literals in the other modules.
+- `MICROPYTHON_VERSION` (repo root) pins the exact firmware `.uf2` URL. Bump
+  it deliberately — the installer reads it straight from the selected ref for
+  every version, live.
+- Installer flow: WebUSB PICOBOOT flash (`picoboot.js`/`uf2.js`) with a
+  drag-`.uf2` fallback → Web Serial raw-REPL file push (`repl.js`) → write
+  `config.json` from the form → reboot. See `docs/development.md`.
+- The config form mirrors most of `src/webui/static/config.html`, grouped
+  the same way behind `<details>` for everything past the basics (device
+  name, Wi-Fi, LED count/pin, watchdog): setup network, LEDs, MQTT (incl.
+  TLS/certificate validation, with a matching certificate file upload —
+  written to `certs/<name>` alongside the other files during install,
+  mirroring `src/channels/webapi.py`'s `_handle_certificate_upload`), the
+  button/IR/webapi Wi-Fi-access toggles, boot mode, logging. Every value is
+  always written (harmless no-op through `Storage`'s merge when it matches
+  `DEFAULTS`) — `configJson`'s key paths are checked against real `DEFAULTS`
+  in `tests/installer/config.test.mjs`. Adding a form field means updating
+  `docs/installer.md`, the form in `docs/installer/index.html`, and
+  `readForm`/`FALLBACK_DEFAULTS` in `app.js` + `configJson` in `repl.js`.
 
 ## Documentation (GitHub Pages)
 

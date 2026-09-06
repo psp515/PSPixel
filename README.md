@@ -61,7 +61,8 @@ Pick whichever control method's convenient — they both work at the same time a
 
 Full docs live at **[psp515.github.io/PicoController](https://psp515.github.io/PicoController/)**. They're split into a plain-language user track and a developer (Contributing) track:
 
-- [Manual setup](https://psp515.github.io/PicoController/setup.html) — wiring, flashing MicroPython, copying the project on, and configuring it
+- [Web installer](https://psp515.github.io/PicoController/installer/) — flash MicroPython and install the controller onto a Pico W from the browser (Chrome/Edge/Opera)
+- [Manual setup](https://psp515.github.io/PicoController/setup.html) — the by-hand version: wiring, flashing MicroPython, copying the project on, and configuring it
 - [Channels](https://psp515.github.io/PicoController/channels/) — the ways to control it (button and MQTT)
 - [Animations](https://psp515.github.io/PicoController/animations/) — the lighting modes and their shared controls
 - [Contributing](https://psp515.github.io/PicoController/contributing/) — architecture, dev-environment setup, the config file, and how to add a new channel or mode

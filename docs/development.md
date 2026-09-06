@@ -219,6 +219,143 @@ Things to keep in mind:
   reloads `config.json`, and resumes the persisted mode. The MQTT broker
   publishes the last-will `"offline"` message if a session was up.
 
+## Web installer
+
+The [Web installer](installer.md) is a static page under `docs/installer/`
+(plain HTML/JS, no Jekyll front matter, so it's copied to the site verbatim
+and kept out of the nav). It runs entirely in the browser using **WebUSB**
+(to flash MicroPython) and **Web Serial** (to push files over the REPL), so
+it's Chromium-desktop only.
+
+### Version picker: installs live from GitHub, no build/release step
+
+Two dropdowns at the top of the page choose the git ref to install from.
+**Install from** picks the kind of ref — *Released version* (the project's
+[tags](https://github.com/psp515/PicoController/tags), `fetchTagList`,
+newest first) or *Branch (unreleased)* (`fetchBranchList`, default branch
+first then alphabetical) — and **Version to install** lists the refs of that
+kind, with the first one preselected. Releases are the default; with no tags
+published yet the page falls back to the branch list automatically.
+
+Picking a ref calls `source.js`'s `fetchSource(ref)`, which lists that ref's
+file tree via the GitHub API and pulls each file's bytes from
+`raw.githubusercontent.com`, keeping only the device files
+(`isDeviceFile`/`dirsFor`). There is nothing to build or publish ahead of
+time: tagging a commit — or just pushing a branch — is enough for it to show
+up. Everything is fetched from GitHub; there is no local/offline install
+path.
+
+Firmware comes from `MICROPYTHON_VERSION` read at the selected ref
+(`fetchFirmwareUrl`) and nowhere else — a ref cut before that file existed
+falls back straight to `DEFAULT_FIRMWARE_URL`, a hardcoded `v1.29.0` URL in
+`const.js` bumped by hand alongside the repo-root `MICROPYTHON_VERSION`
+file, so an old tag always resolves to *something* installable
+(`resolveFirmwareUrl` in `app.js`, the fallback logged as a note). No other
+ref's pin is ever borrowed: what you install is either that ref's own pin or
+the installer default. Every ref pre-fills the config
+form from `FALLBACK_DEFAULTS`, a small hardcoded object in `app.js`
+mirroring `DEFAULTS`' installer-relevant fields — there's no `defaults.json`
+to fetch anywhere.
+
+Flashing over WebUSB opens the board with an 8s timeout
+(`OPEN_TIMEOUT_MS` in `app.js`) — without it, a missing WinUSB driver (the
+common case on Windows; see [the installer page](installer.md#if-something-goes-wrong))
+leaves `USBDevice.open()` pending indefinitely with no error and the button
+stuck disabled.
+
+Each wizard step (`step-firmware`/`step-connect`/`step-install`) gets a
+green border + "✓ ..." banner on success or a red border + "✗ ..." banner on
+error, via `setStepStatus()` in `app.js` — so a failed step is obvious and
+it's clear which one to retry. On a successful install, the banner also
+appends Wi-Fi-specific next steps (`postInstallGuidance()` in `app.js`):
+find the device's IP on your router if Wi-Fi was configured, or connect to
+its own setup network (`http://192.168.4.1/`) if it wasn't.
+
+There is **no build or release step for a tagged/pushed version** — nothing
+runs before a tag exists, nothing gets published after. Picking a tag or
+`main` in the picker is enough; the page fetches everything it needs live.
+
+### Page modules (`docs/installer/`)
+
+| Module | Responsibility |
+|---|---|
+| `const.js` | every hardcoded endpoint, id and limit: `OWNER`/`REPO`, the GitHub API/raw bases and their `apiUrl`/`rawUrl` builders, `DEFAULT_FIRMWARE_URL`, the USB vendor/product ids, `CERT_MAX_BYTES`, `DEFAULT_BRANCH` |
+| `source.js` | lists tags (`fetchTagList`) and branches (`fetchBranchList`/`orderBranches`), resolves a ref's firmware pin (`fetchFirmwareUrl`), and assembles the `{dirs, files}` bundle object straight from any git ref (`fetchSource`) via the GitHub tree + raw file API |
+| `net.js` | the generic `fetchBinary` and `toBase64` helpers |
+| `uf2.js` | parse a `.uf2` into coalesced `{addr, bytes}` flash runs (RP2040 family only) |
+| `picoboot.js` | WebUSB PICOBOOT client — `EXCLUSIVE_ACCESS` / `EXIT_XIP` / `FLASH_ERASE` / `WRITE` / `REBOOT` in 4 KB sectors |
+| `repl.js` | Web Serial raw-REPL: enter raw mode, `exec()` a snippet, then push each file in ~1 KB base64 chunks via `ubinascii.a2b_base64`, verifying size with `os.stat` |
+| `app.js` | wires the version picker, the four wizard steps, per-step status, the progress bars, and the log |
+
+`uf2.js`, `dirsFor`/`isDeviceFile` in `source.js`, and `splitB64` in
+`repl.js` are pure and unit-tested (`tests/installer/*.test.mjs`, run with
+`node --test`). The USB/serial paths and the live GitHub fetch need real
+hardware/network and aren't covered by CI — test them against a board.
+
+### Testing the page locally
+
+WebUSB and Web Serial need a secure context, which `http://localhost` counts
+as — no HTTPS needed, but `file://` will not work. Serve the repo and open
+the page:
+
+```
+python -m http.server 8000
+```
+
+then `http://localhost:8000/docs/installer/`. The page always installs from
+GitHub — the ref you pick in the version picker, never your working tree —
+so to try uncommitted changes, push them to a branch and select it under
+*Install from → Branch*.
+
+Without a board you can still check the wizard, the ref listings and source
+downloads, and the form pre-fill. The flash + install steps need a real
+Pico W (hold BOOTSEL for step 1) and Chromium.
+
+### Config the installer writes
+
+The form in `index.html` mirrors most of the real config page
+(`src/webui/static/config.html`), grouped the same way, behind `<details>`
+for anything past the always-visible basics (device name, Wi-Fi, LED
+count/pin, watchdog): setup-network (AP) name/password, LED
+on-after-boot/segmenting, MQTT (server/port/credentials/topic/single-topic,
+TLS + NTP host + certificate validation + a certificate file upload),
+button/IR/Web-UI-Wi-Fi-access enablement, boot mode, and logging. `app.js`'s
+`readForm()` reads it into a flat object, `configJson()` in `repl.js` nests
+it back into the real `config.json` shape and `pushBundle()` writes it
+alongside the source files over the REPL — nothing is conditionally
+omitted, since writing a field's own default value is a no-op through
+`Storage`'s merge. `configJson`'s key paths are checked against the real
+`DEFAULTS` in `tests/installer/config.test.mjs` (via `python -c
+"...defaults..."`), so a typo'd key fails CI instead of silently writing a
+field the device never reads.
+
+**Certificate upload**: when "Validate broker certificate" is checked, a
+drop zone (`#cert-dropzone`) appears and becomes required (enforced in
+`isConfigValid()`, same 16 KB cap as `CERT_MAX_BYTES` in
+`src/channels/webapi.py`). It wraps a hidden `<input type="file">`
+(`#mqtt-cert-file-input`) — clicking or `Enter`/`Space` on the zone opens
+the native picker, and a real drop event populates the same input via
+`DataTransfer` (`certFileInput.files = event.dataTransfer.files`), so
+`readCertFile()`/`isConfigValid()` don't need to know which path was used.
+On install, `app.js`'s `readCertFile()` reads it into base64; `pushBundle()`
+(passed as `certFile`) creates `certs/` on the device and writes it to
+`certs/<filename>` alongside the other files, and `configJson()` sets
+`mqtt.certificate.name` to that filename — the same file
+`_certificate_disabled_reason()` in `src/channels/mqtt.py` checks for at
+connect time.
+
+**Wi-Fi scan**: the *Scan for networks* button runs a raw REPL snippet
+(`import network; ...WLAN(STA_IF).scan()...`) over the already-open step-2
+connection and fills `#wifi-ssid-options`, a `<datalist>` the SSID `<input
+list=...>` references — the same combo-box pattern
+`src/webui/static/config.html` uses, so typing a name by hand still works.
+This only needs MicroPython's built-in `network` module, not the installed
+controller app, so it works even before step 4 has run.
+
+Adding a field means touching `index.html`, `readForm`/`FALLBACK_DEFAULTS`
+in `app.js`, `configJson` in `repl.js`, the "Top-level keys" table above,
+and [the installer page](installer.md) if it's user-facing.
+
 ## Extending the device
 
 - [Channel internals](contributing/channels.md) — add a new way to control the

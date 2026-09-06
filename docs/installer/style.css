@@ -1,0 +1,520 @@
+:root {
+  color-scheme: dark;
+  --bg: #14171c;
+  --panel: #1c2027;
+  --border: #2c313b;
+  --text: #e6e8ec;
+  --muted: #9aa3b2;
+  --accent: #6ea8fe;
+  --error: #ff6b6b;
+  --success: #4caf6f;
+  --warning: #e6a23c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Custom `display` on a class (e.g. flex/inline-block) beats the browser's
+   default `[hidden] { display: none }` because both are author-origin rules
+   at equal specificity and this one is declared later - without this, any
+   element we both give a non-block display to AND toggle `hidden` on stays
+   visible. Keep this as the single source of truth for hiding. */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1rem 4rem;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+}
+
+.lead {
+  color: var(--muted);
+}
+
+a {
+  color: var(--accent);
+}
+
+code {
+  background: var(--panel);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+.banner {
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.banner.error {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.version-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  color: var(--muted);
+  margin: 1rem 0;
+}
+
+.version-picker > label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1 1 16rem;
+}
+
+.version-picker select {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+
+/* Collapsed: just the summary bar. Open: grows to dominate the viewport
+   rather than pushing the wizard down by the log's full height. */
+.console-bar {
+  margin: 1rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.console-bar summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.console-bar summary::-webkit-details-marker {
+  display: none;
+}
+
+.console-bar[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.console-icon {
+  display: inline-block;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.console-bar[open] .console-icon {
+  transform: rotate(90deg);
+}
+
+.console-bar summary .hint {
+  font-weight: 400;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  margin: 1.2rem 0;
+}
+
+.stepper-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Beats the generic `button:disabled` rule below, which is more specific
+   than a bare `.stepper-item` (type+pseudo-class outweighs one class) and
+   would otherwise paint disabled steps with its solid card-like background. */
+.stepper-item:disabled {
+  cursor: default;
+  background: none;
+  color: var(--muted);
+}
+
+.stepper-item:disabled:not(.active):not(.done) {
+  opacity: 0.5;
+}
+
+.stepper-item + .stepper-item {
+  position: relative;
+}
+
+.stepper-item + .stepper-item::after {
+  content: "";
+  position: absolute;
+  top: 0.9rem;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.stepper-item.done + .stepper-item::after {
+  background: var(--success);
+}
+
+.stepper-dot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.stepper-label {
+  font-size: 0.8rem;
+}
+
+.stepper-item.active {
+  color: var(--text);
+}
+
+.stepper-item.active .stepper-dot {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stepper-item.done .stepper-dot {
+  border-color: var(--success);
+  background: var(--success);
+  color: #0b0e13;
+}
+
+.stepper-item.done .stepper-dot::before {
+  content: "✓";
+}
+
+.stepper-item.done .stepper-num {
+  display: none;
+}
+
+.steps {
+  list-style: none;
+  counter-reset: step;
+  padding: 0;
+}
+
+.step {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin: 1rem 0;
+  animation: step-in 0.2s ease;
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step[aria-disabled="true"] {
+  opacity: 0.45;
+}
+
+.spinner {
+  display: inline-block;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+.loading-panel progress {
+  max-width: 16rem;
+}
+
+.step.success {
+  border-color: var(--success);
+}
+
+.step.warning {
+  border-color: var(--warning);
+}
+
+.step.error {
+  border-color: var(--error);
+}
+
+.step-status {
+  margin: 0.7rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.step-status.success {
+  background: rgba(76, 175, 111, 0.15);
+  color: var(--success);
+}
+
+.step-status.warning {
+  background: rgba(230, 162, 60, 0.15);
+  color: var(--warning);
+}
+
+.step-status.error {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--error);
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+button {
+  background: var(--accent);
+  color: #0b0e13;
+  border: 0;
+  border-radius: 7px;
+  padding: 0.55rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: none;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+button.secondary:disabled {
+  background: none;
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+/* Declared after `button:disabled` (equal specificity: type+class vs
+   type+pseudo-class) so the skeleton shimmer wins on a button that is both
+   .is-loading and disabled at the same time. */
+button.is-loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--border) 25%, var(--panel) 37.5%, var(--border) 50%);
+  background-size: 400% 100%;
+  animation: skeleton 1.2s ease-in-out infinite;
+}
+
+/* button.secondary:disabled (class+pseudo+type) outguns plain
+   button.is-loading (class+type) regardless of source order, so a disabled
+   .secondary.is-loading button (e.g. "Scan for networks" mid-scan) silently
+   loses its shimmer to the flat disabled style. Three class-level selectors
+   here beats that combination outright. */
+button.secondary.is-loading:disabled {
+  background: linear-gradient(90deg, var(--border) 25%, var(--panel) 37.5%, var(--border) 50%);
+  background-size: 400% 100%;
+  color: transparent;
+  animation: skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+label {
+  display: block;
+  margin: 0.5rem 0;
+  color: var(--muted);
+}
+
+label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.field-row label {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  padding: 1.2rem 1rem;
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.dropzone:hover,
+.dropzone:focus-visible {
+  border-color: var(--accent);
+  color: var(--text);
+  outline: none;
+}
+
+.dropzone.dragover {
+  border-color: var(--accent);
+  background: rgba(110, 168, 254, 0.08);
+  color: var(--text);
+}
+
+.dropzone-icon {
+  color: inherit;
+}
+
+.dropzone-text {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.dropzone-browse {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.dropzone-filename {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+input {
+  display: block;
+  width: 100%;
+  margin-top: 0.2rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+
+input[type="checkbox"] {
+  width: auto;
+  display: inline;
+  margin: 0;
+}
+
+details {
+  margin: 0.8rem 0;
+}
+
+summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+progress {
+  width: 100%;
+  margin-top: 0.8rem;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+#log {
+  background: #0b0e13;
+  padding: 1rem;
+  margin: 0;
+  min-height: 3rem;
+  max-height: 70vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  font: 12px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--muted);
+}

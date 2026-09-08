@@ -1,31 +1,31 @@
 <div align="center">
 
-  <img src="src/webui/static/icons/logo.png" alt="PicoController logo" width="96" height="96" />
+  <img src="src/webui/static/icons/logo.png" alt="PSPixel logo" width="96" height="96" />
 
-  <h1>Pico Controller</h1>
+  <h1>PSPixel</h1>
   <p>MicroPython ARGB LED controller for the Raspberry Pi Pico W</p>
 
   <div>
-    <a href="https://github.com/psp515/PicoController/actions/workflows/ci.yml">
-      <img src="https://img.shields.io/github/actions/workflow/status/psp515/PicoController/ci.yml?branch=main&label=CI" alt="CI status" />
+    <a href="https://github.com/psp515/PSPixel/actions/workflows/ci.yml">
+      <img src="https://img.shields.io/github/actions/workflow/status/psp515/PSPixel/ci.yml?branch=main&label=CI" alt="CI status" />
     </a>
-    <a href="https://psp515.github.io/PicoController/">
-      <img src="https://img.shields.io/github/deployments/psp515/PicoController/github-pages?label=docs" alt="docs" />
+    <a href="https://psp515.github.io/PSPixel/">
+      <img src="https://img.shields.io/github/deployments/psp515/PSPixel/github-pages?label=docs" alt="docs" />
     </a>
     <a href="">
-      <img src="https://img.shields.io/github/last-commit/psp515/PicoController" alt="last update" />
+      <img src="https://img.shields.io/github/last-commit/psp515/PSPixel" alt="last update" />
     </a>
-    <a href="https://github.com/psp515/PicoController/network/members">
-      <img src="https://img.shields.io/github/forks/psp515/PicoController" alt="forks" />
+    <a href="https://github.com/psp515/PSPixel/network/members">
+      <img src="https://img.shields.io/github/forks/psp515/PSPixel" alt="forks" />
     </a>
-    <a href="https://github.com/psp515/PicoController/stargazers">
-      <img src="https://img.shields.io/github/stars/psp515/PicoController" alt="stars" />
+    <a href="https://github.com/psp515/PSPixel/stargazers">
+      <img src="https://img.shields.io/github/stars/psp515/PSPixel" alt="stars" />
     </a>
-    <a href="https://github.com/psp515/PicoController/issues/">
-      <img src="https://img.shields.io/github/issues/psp515/PicoController" alt="open issues" />
+    <a href="https://github.com/psp515/PSPixel/issues/">
+      <img src="https://img.shields.io/github/issues/psp515/PSPixel" alt="open issues" />
     </a>
-    <a href="https://github.com/psp515/PicoController/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/psp515/PicoController" alt="license" />
+    <a href="https://github.com/psp515/PSPixel/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/psp515/PSPixel" alt="license" />
     </a>
   </div>
 </div>
@@ -40,7 +40,7 @@
 
 ## About the project
 
-PicoController turns a Raspberry Pi Pico W and a WS2812B ARGB LED strip into a
+PSPixel turns a Raspberry Pi Pico W and a WS2812B ARGB LED strip into a
 smart light you can control however suits you in the moment — the button on the
 enclosure or a home automation system.
 
@@ -59,13 +59,13 @@ Pick whichever control method's convenient — they both work at the same time a
 
 ## Documentation
 
-Full docs live at **[psp515.github.io/PicoController](https://psp515.github.io/PicoController/)**. They're split into a plain-language user track and a developer (Contributing) track:
+Full docs live at **[psp515.github.io/PSPixel](https://psp515.github.io/PSPixel/)** (built with Astro + Starlight). They're split into a plain-language **user guide** and a **developer guide**, each with its own sidebar:
 
-- [Web installer](https://psp515.github.io/PicoController/installer/) — flash MicroPython and install the controller onto a Pico W from the browser (Chrome/Edge/Opera)
-- [Manual setup](https://psp515.github.io/PicoController/setup.html) — the by-hand version: wiring, flashing MicroPython, copying the project on, and configuring it
-- [Channels](https://psp515.github.io/PicoController/channels/) — the ways to control it (button and MQTT)
-- [Animations](https://psp515.github.io/PicoController/animations/) — the lighting modes and their shared controls
-- [Contributing](https://psp515.github.io/PicoController/contributing/) — architecture, dev-environment setup, the config file, and how to add a new channel or mode
+- [Web installer](https://psp515.github.io/PSPixel/installer/) — flash MicroPython and install the controller onto a Pico W from the browser (Chrome/Edge/Opera)
+- [Manual setup](https://psp515.github.io/PSPixel/setup/) — the by-hand version: wiring, flashing MicroPython, copying the project on, and configuring it
+- [Channels](https://psp515.github.io/PSPixel/channels/) — the ways to control it (button and MQTT)
+- [Animations](https://psp515.github.io/PSPixel/animations/) — the lighting modes and their shared controls
+- [Developer guide](https://psp515.github.io/PSPixel/development/) — architecture, dev-environment setup, the config file, and how to add a new channel or mode
 
 ## Contributing
 
@@ -74,8 +74,8 @@ ideas are all welcome. If you build one, run into an issue, or have a mode or
 channel you'd like to add:
 
 - ⭐ **Star** the repo if you find it useful — it helps others find it too.
-- 🐛 Open an [issue](https://github.com/psp515/PicoController/issues) for bugs or feature requests.
-- 🔀 Fork it and send a pull request — the [Contributing docs](https://psp515.github.io/PicoController/contributing/) cover how the pieces fit together and how to add a new channel or mode without touching the core loop.
+- 🐛 Open an [issue](https://github.com/psp515/PSPixel/issues) for bugs or feature requests.
+- 🔀 Fork it and send a pull request — the [Contributing docs](https://psp515.github.io/PSPixel/contributing/) cover how the pieces fit together and how to add a new channel or mode without touching the core loop.
 
 ## License
 

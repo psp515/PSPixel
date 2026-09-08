@@ -1,14 +1,24 @@
+/* Shares the palette + type of the docs landing page
+   (docs/src/pages/index.astro) and Starlight theme
+   (docs/src/styles/custom.css) so the installer doesn't read as a
+   different site. Keep these tokens in step with those. */
 :root {
   color-scheme: dark;
-  --bg: #14171c;
-  --panel: #1c2027;
-  --border: #2c313b;
-  --text: #e6e8ec;
-  --muted: #9aa3b2;
+  --bg: #12151a;
+  --ground-2: #15181e;
+  --panel: #1b1f27;
+  --border: #2b313c;
+  --edge-soft: #232833;
+  --text: #e7e9ee;
+  --ink-dim: #c2c7d2;
+  --muted: #929cb0;
   --accent: #6ea8fe;
+  --accent-ink: #0b0e13;
   --error: #ff6b6b;
   --success: #4caf6f;
   --warning: #e6a23c;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 * {
@@ -24,12 +34,23 @@
   display: none !important;
 }
 
+html {
+  background: var(--bg);
+}
+
 body {
   margin: 0;
-  padding: 2rem 1rem 4rem;
-  background: var(--bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 2.5rem 1rem 4rem;
+  background:
+    radial-gradient(760px 360px at 22% 8%, rgba(110, 168, 254, 0.1), transparent 70%),
+    radial-gradient(640px 420px at 88% 100%, rgba(124, 92, 245, 0.08), transparent 72%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
-  font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 400 16px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 main {
@@ -37,17 +58,41 @@ main {
   margin: 0 auto;
 }
 
+.eyebrow {
+  margin: 0 0 0.75rem;
+  font: 500 0.78rem/1 var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 h1 {
-  font-size: 1.6rem;
+  margin: 0 0 0.4rem;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
 }
 
 h2 {
   font-size: 1.1rem;
   margin: 0 0 0.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 0.8rem;
+  margin: 0.8rem 0 0.3rem;
+  font-family: var(--mono);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .lead {
-  color: var(--muted);
+  color: var(--ink-dim);
+  max-width: 52ch;
 }
 
 a {
@@ -55,14 +100,17 @@ a {
 }
 
 code {
-  background: var(--panel);
+  background: var(--ground-2);
+  border: 1px solid var(--edge-soft);
   padding: 0.1em 0.35em;
   border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.9em;
 }
 
 .banner {
   padding: 0.7rem 1rem;
-  border-radius: 8px;
+  border-radius: 10px;
   margin: 1rem 0;
   border: 1px solid var(--border);
   background: var(--panel);
@@ -80,6 +128,8 @@ code {
   gap: 0.6rem 1rem;
   color: var(--muted);
   margin: 1rem 0;
+  font: 400 0.78rem/1.4 var(--mono);
+  letter-spacing: 0.02em;
 }
 
 .version-picker > label {
@@ -92,10 +142,12 @@ code {
 .version-picker select {
   flex: 1;
   padding: 0.45rem 0.6rem;
-  background: var(--panel);
+  background: var(--ground-2);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text);
+  font: inherit;
+  font-family: var(--sans);
 }
 
 /* Collapsed: just the summary bar. Open: grows to dominate the viewport
@@ -103,7 +155,7 @@ code {
 .console-bar {
   margin: 1rem 0;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--panel);
 }
 
@@ -141,7 +193,7 @@ code {
 .stepper {
   display: flex;
   align-items: center;
-  margin: 1.2rem 0;
+  margin: 1.4rem 0;
 }
 
 .stepper-item {
@@ -154,6 +206,7 @@ code {
   border: 0;
   padding: 0;
   color: var(--muted);
+  font-family: var(--sans);
   font-weight: 600;
   cursor: pointer;
 }
@@ -202,10 +255,14 @@ code {
   background: var(--panel);
   border: 2px solid var(--border);
   font-size: 0.85rem;
+  font-family: var(--mono);
 }
 
 .stepper-label {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
+  font-family: var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .stepper-item.active {
@@ -220,7 +277,7 @@ code {
 .stepper-item.done .stepper-dot {
   border-color: var(--success);
   background: var(--success);
-  color: #0b0e13;
+  color: var(--accent-ink);
 }
 
 .stepper-item.done .stepper-dot::before {
@@ -238,10 +295,10 @@ code {
 }
 
 .step {
-  background: var(--panel);
+  background: linear-gradient(180deg, var(--panel), var(--ground-2));
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.2rem;
+  border-radius: 13px;
+  padding: 1.3rem;
   margin: 1rem 0;
   animation: step-in 0.2s ease;
 }
@@ -306,7 +363,7 @@ code {
 .step-status {
   margin: 0.7rem 0 0;
   padding: 0.5rem 0.7rem;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -335,11 +392,11 @@ code {
 
 button {
   background: var(--accent);
-  color: #0b0e13;
+  color: var(--accent-ink);
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   padding: 0.55rem 1.1rem;
-  font-weight: 600;
+  font: 600 0.95rem/1 var(--sans);
   cursor: pointer;
 }
 
@@ -347,6 +404,10 @@ button.secondary {
   background: none;
   color: var(--text);
   border: 1px solid var(--border);
+}
+
+button.secondary:hover {
+  border-color: var(--accent);
 }
 
 button:disabled {
@@ -431,7 +492,7 @@ label.checkbox {
   margin-top: 0.3rem;
   padding: 1.2rem 1rem;
   border: 1.5px dashed var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   text-align: center;
   color: var(--muted);
   cursor: pointer;
@@ -478,14 +539,23 @@ input {
   padding: 0.45rem 0.6rem;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text);
+  font: inherit;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
 }
 
 input[type="checkbox"] {
   width: auto;
   display: inline;
   margin: 0;
+  accent-color: var(--accent);
 }
 
 details {
@@ -509,12 +579,13 @@ progress {
 
 #log {
   background: #0b0e13;
+  border-radius: 0 0 9px 9px;
   padding: 1rem;
   margin: 0;
   min-height: 3rem;
   max-height: 70vh;
   overflow: auto;
   white-space: pre-wrap;
-  font: 12px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font: 12px/1.5 var(--mono);
   color: var(--muted);
 }

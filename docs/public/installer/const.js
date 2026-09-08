@@ -1,7 +1,7 @@
 // Every hardcoded endpoint, id and limit the installer depends on.
 
 export const OWNER = "psp515";
-export const REPO = "PicoController";
+export const REPO = "PSPixel";
 
 export const GITHUB_API = "https://api.github.com";
 export const GITHUB_RAW = "https://raw.githubusercontent.com";

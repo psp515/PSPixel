@@ -1,12 +1,9 @@
 ---
-layout: default
 title: Manual setup
-nav_order: 3
+description: "Wire the hardware, flash MicroPython, and copy PSPixel onto a Raspberry Pi Pico W by hand."
 ---
 
-# Manual setup
-
-Most people should use the **[Web installer](installer.md)** — it does all of
+Most people should use the **[Web installer](web-installer.md)** — it does all of
 this from the browser. This page is the by-hand version: wire the hardware,
 flash the firmware once, then copy the project's files onto the board. It's
 also the reference for what the installer does under the hood.
@@ -24,17 +21,19 @@ MicroPython.
 The simplest working setup is just the Pico W and a WS2812B strip — the button
 is optional. Here's that minimal example:
 
-![Minimal wiring: Raspberry Pi Pico W and a WS2812B strip](assets/images/schema.png)
+![Minimal wiring: Raspberry Pi Pico W and a WS2812B strip](../../assets/schema.png)
 
-{: .note }
-> In this diagram the strip's data line goes to **GP15** and the button to
-> **GP14**. To use it as-is, set `leds.pin: 15` and `button.pin: 14` in
-> `config.json`; otherwise wire to the defaults in the table below (`GP0` /
-> `GP3`).
+:::note
+In this diagram the strip's data line goes to **GP15** and the button to
+**GP14**. To use it as-is, set `leds.pin: 15` and `button.pin: 14` in
+`config.json`; otherwise wire to the defaults in the table below (`GP0` /
+`GP3`).
+:::
 
-{: .note }
-> A 3D-printable enclosure for this build is available on Thingiverse:
-> [thingiverse.com/thing:6678379](https://www.thingiverse.com/thing:6678379).
+:::note
+A 3D-printable enclosure for this build is available on Thingiverse:
+[thingiverse.com/thing:6678379](https://www.thingiverse.com/thing:6678379).
+:::
 
 ### Pinout (defaults, configurable in `config.json`)
 

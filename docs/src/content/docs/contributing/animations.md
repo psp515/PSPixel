@@ -1,11 +1,7 @@
 ---
-layout: default
 title: Animation internals
-parent: Contributing
-nav_order: 3
+description: "The animation interface, the render loop, and how to add a new lighting mode."
 ---
-
-# Animation internals
 
 How lighting modes are implemented and rendered, and how to add a new one. For
 what each mode looks like and the user-facing controls, see

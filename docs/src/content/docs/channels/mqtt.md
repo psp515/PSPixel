@@ -1,11 +1,7 @@
 ---
-layout: default
 title: MQTT
-parent: Channels
-nav_order: 3
+description: "Control PSPixel and watch its state from Home Assistant, Node-RED, or any MQTT client."
 ---
-
-# MQTT
 
 MQTT lets anything on your network — Home Assistant, Node-RED, a phone app, or
 a command line — control the device and watch its state. Where the
@@ -157,6 +153,7 @@ and `"offline"` when it isn't — including when it loses power or drops off
 unexpectedly (the broker publishes that for it). Use it to drive an
 availability indicator in your dashboard without polling.
 
-{: .note }
-> How the connection, message handling and certificate loading are implemented
-> is documented in [Channel internals](../contributing/channels.md#mqtt-channel).
+:::note
+How the connection, message handling and certificate loading are implemented
+is documented in [Channel internals](../contributing/channels.md#mqtt-channel).
+:::

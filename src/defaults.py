@@ -1,5 +1,5 @@
 DEFAULTS = {
-    "device": {"name": "PicoController"},
+    "device": {"name": "PSPixel"},
     "leds": {
         "count": 144,
         "pin": 0,
@@ -25,7 +25,7 @@ DEFAULTS = {
     "network": {
         "wifi": {"ssid": "", "password": ""},
         "ap": {
-            "ssid": "PicoController",
+            "ssid": "PSPixel",
             "password": "Pico123456!",
             "retry_interval": 120,
             "retry_quiet_period": 60,

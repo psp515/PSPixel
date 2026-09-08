@@ -5,8 +5,8 @@ import { Picoboot, requestBootDevice, webusbSupported } from "./picoboot.js";
 import { Repl, isValidCertName, pushBundle, reboot, requestSerialPort, serialSupported, sleep } from "./repl.js";
 
 const FALLBACK_DEFAULTS = {
-  device: { name: "PicoController" },
-  network: { ap: { ssid: "PicoController", password: "Pico123456!" } },
+  device: { name: "PSPixel" },
+  network: { ap: { ssid: "PSPixel", password: "Pico123456!" } },
   leds: { count: 144, pin: 0, segmenting: { length: 2 } },
   mqtt: { port: 1883, base_topic: "controller/led/1", ntp_host: "pool.ntp.org" },
 };
@@ -544,13 +544,13 @@ function readForm() {
   const data = new FormData(els.form);
   const bool = (name) => data.get(name) === "on";
   return {
-    deviceName: data.get("deviceName") || "PicoController",
+    deviceName: data.get("deviceName") || "PSPixel",
     wifiSsid: data.get("wifiSsid") || "",
     wifiPassword: data.get("wifiPassword") || "",
     ledCount: Number(data.get("ledCount")) || 144,
     ledPin: Number(data.get("ledPin")) || 0,
     watchdog: bool("watchdog"),
-    apSsid: data.get("apSsid") || "PicoController",
+    apSsid: data.get("apSsid") || "PSPixel",
     apPassword: data.get("apPassword") || "",
     ledsOnAfterBoot: bool("ledsOnAfterBoot"),
     segmentingEnabled: bool("segmentingEnabled"),

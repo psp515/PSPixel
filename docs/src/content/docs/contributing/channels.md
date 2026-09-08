@@ -1,11 +1,7 @@
 ---
-layout: default
 title: Channel internals
-parent: Contributing
-nav_order: 2
+description: "How the Wi-Fi, button, MQTT and Web API channels work, and how to add a new one."
 ---
-
-# Channel internals
 
 How the control channels work under the hood, and how to add a new one. For
 what each channel does from a user's point of view, see the

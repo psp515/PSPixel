@@ -1,10 +1,7 @@
 ---
-layout: default
 title: Animations
-nav_order: 5
+description: "The lighting modes and the shared brightness, speed, colour and direction controls."
 ---
-
-# Animations
 
 An **animation** is one lighting mode — a look the strip shows. You pick a
 mode, and a few shared controls (brightness, speed, color, direction) tune how
@@ -75,6 +72,7 @@ few LEDs instead of stretching across the whole strip once. Configure it under
 - If `length` ends up as large as the strip, the whole strip is treated as one
   block (no repeat).
 
-{: .note }
-> The animation code interface, frame rendering, and how to add a new mode are
-> in [Animation internals](../contributing/animations.md).
+:::note
+The animation code interface, frame rendering, and how to add a new mode are
+in [Animation internals](../contributing/animations.md).
+:::

@@ -1,11 +1,7 @@
 ---
-layout: default
-title: Web API
-parent: Channels
-nav_order: 4
+title: Web UI / Web API
+description: "The dashboard and configuration page PSPixel serves over the network."
 ---
-
-# Web UI / Web API
 
 A browser-based dashboard and configuration page, served by the device
 itself — no app, no cloud account, nothing to install. It works over your
@@ -55,23 +51,26 @@ Configured in the `webapi` section of `config.json`:
 |---|---|---|
 | `webapi.wifi_access` | `true` | Set to `false` to restrict the dashboard/API to the device's own [setup AP](network.md#cant-connect-the-device-opens-its-own-setup-network) — they stay unreachable over your configured Wi-Fi network, but always reachable on the setup AP. `true` (default) allows both. |
 
-{: .important }
-> **Changes need a restart.** Like Wi-Fi credentials, saving a new
-> `webapi.wifi_access` value doesn't take effect immediately — restart the
-> device (restart button or power cycle) to apply it. This is deliberate:
-> it means saving this setting can never immediately lock you out of the
-> page you just used to change it.
+:::caution
+**Changes need a restart.** Like Wi-Fi credentials, saving a new
+`webapi.wifi_access` value doesn't take effect immediately — restart the
+device (restart button or power cycle) to apply it. This is deliberate:
+it means saving this setting can never immediately lock you out of the
+page you just used to change it.
+:::
 
-{: .important }
-> **Not available in mqtt-ssl mode.** With `system.default_mode` set to
-> `"mqtt-ssl"`, the dashboard and JSON API aren't started at all — that's
-> the point of the mode, freeing memory for the encrypted MQTT connection.
-> Hold the device button ~5 seconds to restart into
-> [config mode](../setup.md#boot-modes), where the dashboard is available on
-> the setup network. The **Restart device** button also saves any pending
-> config changes before rebooting.
+:::caution
+**Not available in mqtt-ssl mode.** With `system.default_mode` set to
+`"mqtt-ssl"`, the dashboard and JSON API aren't started at all — that's
+the point of the mode, freeing memory for the encrypted MQTT connection.
+Hold the device button ~5 seconds to restart into
+[config mode](../setup.md#boot-modes), where the dashboard is available on
+the setup network. The **Restart device** button also saves any pending
+config changes before rebooting.
+:::
 
-{: .note }
-> How the server, routing, and static-file serving work internally is
-> covered in
-> [Channel internals](../contributing/channels.md#web-api--web-ui-channel).
+:::note
+How the server, routing, and static-file serving work internally is
+covered in
+[Channel internals](../contributing/channels.md#web-api--web-ui-channel).
+:::

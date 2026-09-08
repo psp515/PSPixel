@@ -1,11 +1,7 @@
 ---
-layout: default
 title: Button
-parent: Channels
-nav_order: 2
+description: "The two gestures of the enclosure-cover button: short press and hold."
 ---
-
-# Button
 
 The button on the enclosure cover is the whole no-phone, no-network interface —
 two gestures, one button.
@@ -33,6 +29,7 @@ Configured in the `button` section of `config.json`:
 | `button.pin` | `3` | Which GPIO pin the button is wired to. Changing it needs a reboot (you're rewiring anyway). |
 | `button.enabled` | `true` | Set to `false` to make the device ignore the button entirely. |
 
-{: .note }
-> How the press timing and debouncing work is covered in
-> [Channel internals](../contributing/channels.md#button-channel).
+:::note
+How the press timing and debouncing work is covered in
+[Channel internals](../contributing/channels.md#button-channel).
+:::

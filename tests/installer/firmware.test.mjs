@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseFirmwarePin, assertAllowedFirmwareUrl } from "../../docs/installer/source.js";
-import { FIRMWARE_URL_PREFIX } from "../../docs/installer/const.js";
+import { parseFirmwarePin, assertAllowedFirmwareUrl } from "../../docs/public/installer/source.js";
+import { FIRMWARE_URL_PREFIX } from "../../docs/public/installer/const.js";
 
 const OK_URL = `${FIRMWARE_URL_PREFIX}RPI_PICO_W-20260824-v1.29.0.uf2`;
 const SHA = "a".repeat(64);

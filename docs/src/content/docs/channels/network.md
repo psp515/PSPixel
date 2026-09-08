@@ -1,11 +1,7 @@
 ---
-layout: default
 title: Network
-parent: Channels
-nav_order: 1
+description: "How PSPixel joins your Wi-Fi and falls back to its own setup network."
 ---
-
-# Network
 
 Wi-Fi isn't something you control the device *with* — it just keeps the device
 connected to your network so the [MQTT channel](mqtt.md) and the [Web
@@ -20,19 +16,20 @@ section of the [Configuration page](webapi.md):
 |---|---|---|
 | `network.wifi.ssid` | `""` | Your Wi-Fi network name. Leave it empty to turn Wi-Fi off — which also turns MQTT off, since MQTT needs the network. |
 | `network.wifi.password` | `""` | Your Wi-Fi password. |
-| `network.ap.ssid` | `"PicoController"` | Name of the device's own setup network (see below). |
+| `network.ap.ssid` | `"PSPixel"` | Name of the device's own setup network (see below). |
 | `network.ap.password` | `"Pico123456!"` | Password for the setup network. Leave it empty for an open (no password) network. |
 | `network.ap.retry_interval` | `120` | Seconds between automatic retries of your Wi-Fi network while the device is on its setup AP. |
 | `network.ap.retry_quiet_period` | `60` | Minimum seconds of no Web UI/API activity on the setup AP before a retry is attempted, so an active setup session isn't interrupted. |
 
-{: .important }
-> **Changes need a restart.** Unlike most settings, saving a new
-> `network.wifi.ssid`/`network.wifi.password` (or `network.ap.ssid`/
-> `network.ap.password`) doesn't take effect immediately — use the restart
-> button on the [Web UI](webapi.md), or power-cycle the device, to actually
-> try the new credentials. This is deliberate, not a bug: it keeps the
-> network channel simple, and the setup network below is always there as a
-> safe way back in if the new credentials turn out to be wrong.
+:::caution
+**Changes need a restart.** Unlike most settings, saving a new
+`network.wifi.ssid`/`network.wifi.password` (or `network.ap.ssid`/
+`network.ap.password`) doesn't take effect immediately — use the restart
+button on the [Web UI](webapi.md), or power-cycle the device, to actually
+try the new credentials. This is deliberate, not a bug: it keeps the
+network channel simple, and the setup network below is always there as a
+safe way back in if the new credentials turn out to be wrong.
+:::
 
 ## Can't connect? The device opens its own setup network
 
@@ -77,6 +74,7 @@ name field — handy while connected to the setup network.
 - **Wi-Fi settings can't be changed over MQTT**, only by editing the config
   or through the Web UI.
 
-{: .note }
-> The connect-and-reconnect logic is documented in
-> [Channel internals](../contributing/channels.md#network-channel).
+:::note
+The connect-and-reconnect logic is documented in
+[Channel internals](../contributing/channels.md#network-channel).
+:::

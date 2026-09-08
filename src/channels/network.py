@@ -51,7 +51,7 @@ class NetworkChannel(Channel):
     def _ap_credentials(self):
         ssid = self.state.get("network", "ap", "ssid", default="")
         if not ssid:
-            name = self.state.get("device", "name", default="PicoController")
+            name = self.state.get("device", "name", default="PSPixel")
             ssid = name + DEFAULT_AP_SUFFIX
         password = self.state.get("network", "ap", "password", default="")
         return ssid, password

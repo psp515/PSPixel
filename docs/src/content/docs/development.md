@@ -1,11 +1,7 @@
 ---
-layout: default
-title: Development
-parent: Contributing
-nav_order: 1
+title: Development guide
+description: "Architecture, the host-side dev environment, the config file, and the full list of config keys."
 ---
-
-# Development guide
 
 This page is for anyone changing the code: 
 - how the device works internally,
@@ -90,7 +86,7 @@ Install once:
 pip install ruff pytest
 ```
 
-Then, matching `.github/workflows/ci.yml` (lint → build → test):
+Then, matching `.github/workflows/ci.yml` (lint → build → test → installer → docs):
 
 - Lint: `python -m ruff check src main.py`
 - Compile-check (syntax only, all source files): `python -m compileall -q src main.py`
@@ -221,9 +217,10 @@ Things to keep in mind:
 
 ## Web installer
 
-The [Web installer](installer.md) is a static page under `docs/installer/`
-(plain HTML/JS, no Jekyll front matter, so it's copied to the site verbatim
-and kept out of the nav). It runs entirely in the browser using **WebUSB**
+The [Web installer](web-installer.md) is a static page under
+`docs/public/installer/` (plain HTML/JS in the Astro site's `public/`
+directory, so it's copied to `…/installer/` verbatim, outside Starlight). It
+runs entirely in the browser using **WebUSB**
 (to flash MicroPython) and **Web Serial** (to push files over the REPL), so
 it's Chromium-desktop only.
 
@@ -231,7 +228,7 @@ it's Chromium-desktop only.
 
 Two dropdowns at the top of the page choose the git ref to install from.
 **Install from** picks the kind of ref — *Released version* (the project's
-[tags](https://github.com/psp515/PicoController/tags), `fetchTagList`,
+[tags](https://github.com/psp515/PSPixel/tags), `fetchTagList`,
 newest first) or *Branch (unreleased)* (`fetchBranchList`, default branch
 first then alphabetical) — and **Version to install** lists the refs of that
 kind, with the first one preselected. Releases are the default; with no tags
@@ -287,7 +284,7 @@ There is **no build or release step for a tagged/pushed version** — nothing
 runs before a tag exists, nothing gets published after. Picking a tag or
 `main` in the picker is enough; the page fetches everything it needs live.
 
-### Page modules (`docs/installer/`)
+### Page modules (`docs/public/installer/`)
 
 | Module | Responsibility |
 |---|---|
@@ -308,17 +305,25 @@ aren't covered by CI — test them against a board.
 ### Testing the page locally
 
 WebUSB and Web Serial need a secure context, which `http://localhost` counts
-as — no HTTPS needed, but `file://` will not work. Serve the repo and open
-the page:
+as — no HTTPS needed, but `file://` will not work. Run the docs site and open
+the installer route:
 
 ```
-python -m http.server 8000
+cd docs
+npm install
+npm run dev
 ```
 
-then `http://localhost:8000/docs/installer/`. The page always installs from
-GitHub — the ref you pick in the version picker, never your working tree —
-so to try uncommitted changes, push them to a branch and select it under
-*Install from → Branch*.
+The installer lives in `docs/public/installer/`, served verbatim outside
+Starlight. Astro's **dev server** does not serve `index.html` for a bare
+directory request on a `public/` path, so during `npm run dev` open
+`http://localhost:4321/PSPixel/installer/index.html` (not the bare
+`…/installer/`). `npm run build && npm run preview` and the deployed site
+both serve `…/installer/` directly — this only affects `astro dev`.
+
+The page always installs from GitHub — the ref you pick in the version
+picker, never your working tree — so to try uncommitted changes, push them
+to a branch and select it under *Install from → Branch*.
 
 Without a board you can still check the wizard, the ref listings and source
 downloads, and the form pre-fill. The flash + install steps need a real

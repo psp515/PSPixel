@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isValidCertName } from "../../docs/installer/repl.js";
+import { isValidCertName } from "../../docs/public/installer/repl.js";
 
 test("accepts plain basenames", () => {
   assert.equal(isValidCertName("ca.pem"), true);

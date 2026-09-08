@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isDeviceFile, dirsFor, orderBranches } from "../../docs/installer/source.js";
+import { isDeviceFile, dirsFor, orderBranches } from "../../docs/public/installer/source.js";
 
 test("isDeviceFile accepts main.py, src/lib .py files, and static assets", () => {
   assert.equal(isDeviceFile("main.py"), true);
@@ -14,7 +14,7 @@ test("isDeviceFile accepts main.py, src/lib .py files, and static assets", () =>
 test("isDeviceFile rejects host-only files", () => {
   assert.equal(isDeviceFile("tests/test_storage.py"), false);
   assert.equal(isDeviceFile("helpers/reset.py"), false);
-  assert.equal(isDeviceFile("docs/installer.md"), false);
+  assert.equal(isDeviceFile("docs/web-installer.md"), false);
   assert.equal(isDeviceFile("README.md"), false);
   assert.equal(isDeviceFile("src/webui/webui.py.bak"), false);
 });

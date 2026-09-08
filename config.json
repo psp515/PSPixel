@@ -1,5 +1,5 @@
 {
-    "device": {"name": "Pico Controller"},
+    "device": {"name": "PSPixel"},
     "leds": {
         "count": 144,
         "pin": 0,

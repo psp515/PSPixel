@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseUf2 } from "../../docs/installer/uf2.js";
+import { parseUf2 } from "../../docs/public/installer/uf2.js";
 
 const MAGIC_START0 = 0x0a324655;
 const MAGIC_START1 = 0x9e5d5157;

@@ -1,11 +1,7 @@
 ---
-layout: default
 title: Contributing
-nav_order: 6
-has_children: true
+description: "Developer documentation: how PSPixel works internally and how to extend it."
 ---
-
-# Contributing
 
 Technical documentation for anyone working on the code: how the device is built
 internally, how to set up a host-side dev environment, and how to add new
@@ -23,7 +19,7 @@ rest of the docs (Home, Setup, Channels, Animations) is written for that.
 
 ## Quick dev loop
 
-Mirrors `.github/workflows/ci.yml` (lint → build → test), all on CPython:
+Mirrors `.github/workflows/ci.yml` (lint → build → test → installer → docs), all on CPython:
 
 ```
 python -m ruff check src main.py

@@ -1,16 +1,13 @@
 ---
-layout: default
 title: Web installer
-nav_order: 2
+description: "Flash MicroPython and install PSPixel onto a Raspberry Pi Pico W from the browser, no tools required."
 ---
-
-# Web installer
 
 The web installer flashes MicroPython and installs the controller onto a
 Raspberry Pi Pico W straight from your browser — no tools to install, no files
 to copy by hand. It's the quickest way to get a fresh board running.
 
-**[Open the installer →](installer/){: .btn .btn-primary }**
+**[Open the installer →](../installer/)**
 
 Prefer to do it by hand, or want to understand every step? See
 [Manual setup](setup.md).
@@ -28,7 +25,7 @@ Prefer to do it by hand, or want to understand every step? See
 
 0. **Pick a version.** *Install from* chooses between
    **Released version** — the project's
-   [tags](https://github.com/psp515/PicoController/tags), newest first, and
+   [tags](https://github.com/psp515/PSPixel/tags), newest first, and
    what you want almost always — and **Branch (unreleased)**, which lists the
    repository's branches (`main` first) and installs whatever is on the one
    you pick. Branches are useful for trying unreleased changes, but aren't
@@ -68,7 +65,7 @@ you how to reach it:
   its own setup network instead, same as below.
 - **If you left Wi-Fi blank**, the device starts up as its own Wi-Fi access
   point on this first boot instead of joining a network — that's expected.
-  Connect your phone or computer's Wi-Fi to it (`PicoController` by default)
+  Connect your phone or computer's Wi-Fi to it (`PSPixel` by default)
   and open `http://192.168.4.1/` to finish setup — see
   [Can't connect?](channels/network.md#cant-connect-the-device-opens-its-own-setup-network).
 

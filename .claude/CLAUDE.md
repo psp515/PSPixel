@@ -1,6 +1,7 @@
 # Project
 
-It is a MicroPython ARGB LED Controller.
+PSPixel — a MicroPython ARGB LED controller. (The GitHub repo slug stays
+`psp515/PSPixel`; only the product/display name is PSPixel.)
 
 ## Requirements
 
@@ -18,7 +19,7 @@ It is a MicroPython ARGB LED Controller.
   to fix credentials. If a network was configured but just unreachable, the
   device keeps periodically retrying it in the background while on the AP
   (quietly, so it doesn't interrupt an active setup session) — see
-  [Configuration](#configuration) and `docs/channels/network.md`
+  [Configuration](#configuration) and `docs/src/content/docs/channels/network.md`
 - Controller Mircopython code should be as simple as possible to understand without complex elements
   - for that aplication might use python abstractions to abtract elements like modes communications and so on
 - Controller should support multiple Animation Modes and animations should be easilly extensible
@@ -96,7 +97,7 @@ If introducing helpfull abstraction will not be problematic it is advised to app
   the AP is up (needed to pick a network's exact SSID while on the setup
   network), and the periodic AP-to-station retry (see below), which briefly
   drops the AP to attempt reconnecting to the configured network — see
-  `docs/contributing/channels.md`.
+  `docs/src/content/docs/contributing/channels.md`.
 - The Web API channel keeps JSON API routes (`src/channels/webapi.py`) and
   static Web UI routes (`src/webui/webui.py`) in separate modules sharing one
   `Microdot` app/port, so either can change without touching the other.
@@ -158,7 +159,7 @@ If introducing helpfull abstraction will not be problematic it is advised to app
   the AP, so an active setup/recovery session on the AP isn't interrupted
   mid-use (a retry attempt briefly drops the AP, since station and AP share
   one radio — see
-  [Channel internals](docs/contributing/channels.md#network-channel)).
+  [Channel internals](docs/src/content/docs/contributing/channels.md#network-channel)).
   Both retry settings are dynamic, no restart needed. `webapi.wifi_access`
   (boot-only, see above) doesn't mean "off" the same way the other channels'
   flags do: `false` restricts the Web UI/API to the device's setup AP only —
@@ -166,10 +167,10 @@ If introducing helpfull abstraction will not be problematic it is advised to app
   allows both; the server itself is never fully disabled, since the setup AP
   must always stay reachable. The Web UI can scan for nearby networks
   (`POST /json/wifi/scan`, mediated through `NetworkChannel` since it's the
-  radio's sole owner — see `docs/contributing/channels.md`).
+  radio's sole owner — see `docs/src/content/docs/contributing/channels.md`).
 - Every config key must be documented in the docs config tables — the
   user channel page's "Settings" table and/or the "Top-level keys"
-  table in `docs/development.md` — with its default and what it's used for.
+  table in `docs/src/content/docs/development.md` — with its default and what it's used for.
   The "Top-level keys" table (developer reference) also carries an
   **Applies** column stating whether a change takes effect live or requires
   a reboot. Adding or changing a config key means updating those tables in
@@ -237,20 +238,22 @@ are part of the plan too — as their own step, in the same change.
 
 ## Development
 
-Mirrors `.github/workflows/ci.yml` (lint → build → test → installer), runs on
-CPython/Node, not on-device.
+Mirrors `.github/workflows/ci.yml` (lint → build → test → installer → docs),
+runs on CPython/Node, not on-device.
 
 - Lint: `python -m ruff check src main.py`
 - Compile-check (syntax only, all source files): `python -m compileall -q src main.py`
 - Tests: `python -m pytest` (pythonpath is `src` and `lib`, configured in `pyproject.toml`; tests live in `tests/`)
 - Installer JS: `node --test tests/installer/*.test.mjs`
+- Docs build: `cd docs && npm ci && npm run build` (Astro + Starlight)
 - Always invoke tools via `python -m` (`ruff`, `pytest`) — bare executables are not on PATH here.
 
 ## Web installer
 
 - Browser-based flash + install for a blank Pico W, served from GitHub Pages at
-  `docs/installer/` (plain static HTML/JS, no front matter so Jekyll copies it
-  verbatim; not in the docs nav — linked from `docs/installer.md`). Chromium
+  `…/PSPixel/installer/`. The app lives in `docs/public/installer/`
+  (plain static HTML/JS in the Astro site's `public/`, copied verbatim,
+  outside Starlight — linked from the `web-installer` doc page). Chromium
   desktop only (WebUSB + Web Serial).
 - The page's **version picker** is two dropdowns: *Install from*
   (Released version / Branch) and the ref list itself — tags
@@ -263,24 +266,41 @@ CPython/Node, not on-device.
 - Firmware is resolved from the selected ref's own `MICROPYTHON_VERSION`
   file only; a ref from before that file existed falls back to the hardcoded
   `v1.29.0` `DEFAULT_FIRMWARE_URL` in `const.js` (`app.js`'s
-  `resolveFirmwareUrl`) — never to another ref's pin. Bump that constant by
+  `resolveFirmwarePin`) — never to another ref's pin. Bump that constant by
   hand alongside the repo-root `MICROPYTHON_VERSION` file so it doesn't
   drift.
+- The firmware `.uf2` is written straight to flash, so its URL must start
+  with `FIRMWARE_URL_PREFIX` (`https://micropython.org/resources/firmware/`,
+  in `const.js`) — a pin pointing anywhere else is a hard error, never a
+  fallback (`source.js`'s `assertAllowedFirmwareUrl`, re-checked in `app.js`
+  before flashing). `MICROPYTHON_VERSION` may carry an optional second field
+  (whitespace-separated): a SHA-256 hex digest of the `.uf2`, verified
+  against the download before `flashUf2` (`source.js`'s `parseFirmwarePin`).
+- Every file pushed over the REPL (source files, `config.json`, the
+  certificate) is verified by reading it back on-device and comparing a
+  `hashlib.sha256` digest to the bytes that were sent (`repl.js`'s
+  `pushBundle`) — not just a size check.
+- Certificate filenames must match `^[A-Za-z0-9._-]{1,64}$` and not be
+  `.`/`..` (`repl.js`'s `isValidCertName`, mirrored by
+  `src/channels/webapi.py`'s `_valid_cert_name`) — they become a device path
+  and a Python string literal.
 - Everything the installer needs is fetched from GitHub at the selected ref.
   There is **no local/offline install path** and no build or release step —
   nothing to run before tagging, nothing to publish after. To test
   uncommitted work, push it to a branch and pick it under *Install from →
   Branch*.
-- All hardcoded endpoints, ids and limits live in `docs/installer/const.js`
+- All hardcoded endpoints, ids and limits live in `docs/public/installer/const.js`
   (`OWNER`/`REPO`, GitHub API + raw bases with the `apiUrl`/`rawUrl`
-  builders, `DEFAULT_FIRMWARE_URL`, USB vendor/product ids, `CERT_MAX_BYTES`,
-  `DEFAULT_BRANCH`) — no URL literals in the other modules.
-- `MICROPYTHON_VERSION` (repo root) pins the exact firmware `.uf2` URL. Bump
-  it deliberately — the installer reads it straight from the selected ref for
-  every version, live.
+  builders, `DEFAULT_FIRMWARE_URL`, `FIRMWARE_URL_PREFIX`, USB vendor/product
+  ids, `CERT_MAX_BYTES`, `DEFAULT_BRANCH`) — no URL literals in the other
+  modules.
+- `MICROPYTHON_VERSION` (repo root) pins the exact firmware `.uf2` URL, with
+  an optional whitespace-separated SHA-256 of that file. Bump it deliberately
+  — the installer reads it straight from the selected ref for every version,
+  live.
 - Installer flow: WebUSB PICOBOOT flash (`picoboot.js`/`uf2.js`) with a
   drag-`.uf2` fallback → Web Serial raw-REPL file push (`repl.js`) → write
-  `config.json` from the form → reboot. See `docs/development.md`.
+  `config.json` from the form → reboot. See the `development` doc page.
 - The config form mirrors most of `src/webui/static/config.html`, grouped
   the same way behind `<details>` for everything past the basics (device
   name, Wi-Fi, LED count/pin, watchdog): setup network, LEDs, MQTT (incl.
@@ -290,30 +310,56 @@ CPython/Node, not on-device.
   button/IR/webapi Wi-Fi-access toggles, boot mode, logging. Every value is
   always written (harmless no-op through `Storage`'s merge when it matches
   `DEFAULTS`) — `configJson`'s key paths are checked against real `DEFAULTS`
-  in `tests/installer/config.test.mjs`. Adding a form field means updating
-  `docs/installer.md`, the form in `docs/installer/index.html`, and
-  `readForm`/`FALLBACK_DEFAULTS` in `app.js` + `configJson` in `repl.js`.
+  in `tests/installer/config.test.mjs` (which imports from
+  `docs/public/installer/`). Adding a form field means updating the
+  `web-installer` doc page, the form in `docs/public/installer/index.html`,
+  and `readForm`/`FALLBACK_DEFAULTS` in `app.js` + `configJson` in `repl.js`.
 
 ## Documentation (GitHub Pages)
 
-- Docs live in `docs/`, built by Jekyll with the `just-the-docs` theme via
-  `remote_theme: just-the-docs/just-the-docs@v0.10.1` in `docs/_config.yml`
-  (pinned tag — bump deliberately). Published by GitHub Pages from the
-  `docs/` folder (deploy from branch).
-- Local preview (needs Ruby + bundler; `docs/Gemfile` pins the `github-pages` gem):
+- `docs/` is an **Astro + Starlight** project (`docs/astro.config.mjs`,
+  `docs/package.json`). `site: https://psp515.github.io`, `base: /PSPixel`.
+  Published by **GitHub Actions** (`.github/workflows/deploy-docs.yml`,
+  `withastro/action` → `actions/deploy-pages`) on push to `main` touching
+  `docs/**`. The repo's Pages source must be set to "GitHub Actions" in
+  Settings. CI also builds the site on every push/PR (`docs-build` job).
+- Local preview (needs Node 22):
   ```
   cd docs
-  bundle install
-  bundle exec jekyll serve --livereload
+  npm install
+  npm run dev
   ```
-  then open http://localhost:4000. First build needs network (remote theme download).
-- Navigation is generated from page front matter: `title` + `nav_order` for
-  top-level pages; section index pages set `has_children: true`; child pages
-  set `parent: <section title>`. New doc page = add front matter, nav updates
-  itself.
-- Theming: stock just-the-docs, no overrides. `color_scheme: dark` in
-  `docs/_config.yml` selects the theme's built-in dark scheme — no
-  `docs/_sass/` or `docs/_includes/` customization.
+  then open http://localhost:4321/PSPixel/. `npm run build` for a
+  production build.
+- **Content** is Markdown in `docs/src/content/docs/` — one Starlight
+  collection. Frontmatter is `title` + `description` (Starlight renders the
+  `title` as the page H1, so the body has no `# heading`). Callouts use
+  `:::note` / `:::caution` asides. Cross-links between pages are relative
+  `.md` links (`../setup.md#anchor`); a small rehype plugin in
+  `astro.config.mjs` (`rehypeDocLinks`) resolves them to final routes —
+  Astro 7's own resolver drops `#fragments`.
+- **Two sidebars** via the `starlight-sidebar-topics` plugin, configured in
+  `astro.config.mjs`: a **User guide** topic (`setup`, `web-installer`,
+  `channels/*`, `animations`) and a **Developer guide** topic (`development`,
+  `contributing/*`). Each page shows only its topic's list, with a switcher.
+  Adding a page = create the `.md` and add its slug to the right topic's
+  `items` array.
+- The site **home page is `docs/src/pages/index.astro`** — a hand-built dark
+  landing page (split hero + section cards), a plain Astro page *outside*
+  Starlight (no sidebar). The Starlight header logo links back to it (site
+  root). Editing it means editing that `.astro` file directly; keep its
+  palette in step with the web installer (`docs/public/installer/style.css`).
+  Card links use `import.meta.env.BASE_URL`.
+- The **web installer app** is static files in `docs/public/installer/`,
+  served verbatim at `…/PSPixel/installer/` (see the Web installer section
+  above). Never a Starlight page. `astro dev` does not serve `index.html`
+  for a bare `public/` directory URL — in dev open `…/installer/index.html`;
+  `npm run preview` and the deployed site serve `…/installer/` directly.
+- Assets: `docs/src/assets/` (imported/optimised, e.g. `schema.png`,
+  `logo.svg`); `docs/public/` (verbatim, e.g. `favicon.svg`, the installer).
+- Theme accent is tuned in `docs/src/styles/custom.css` to match the landing
+  page / installer blue. Starlight keeps its light/dark toggle for doc pages;
+  the landing page is dark-only by design.
 
 ## Session-specific guidance
 
@@ -336,18 +382,19 @@ not as a follow-up:
 - Update the relevant section of this file (`.claude/CLAUDE.md`) if the
   change affects a requirement, architecture rule, or convention stated
   here.
-- The docs are split into two tracks and changes must respect it:
-  **user-facing** pages (`index.md`, `setup.md`, `channels/*.md`,
-  `animations/index.md`) explain use, configuration and behavior in plain
+- The docs are split into two tracks (two Starlight sidebars) and changes
+  must respect it. All pages live under `docs/src/content/docs/`:
+  the **User guide** topic — `setup.md`, `web-installer.md`, `channels/*.md`,
+  `animations/index.md` — explains use, configuration and behavior in plain
   language, with **no implementation details** (no internal method names,
-  constants, or code walkthroughs); **developer** pages under Contributing
-  (`development.md`, `contributing/index.md`, `contributing/channels.md`,
-  `contributing/animations.md`) hold the architecture and all internals.
+  constants, or code walkthroughs); the **Developer guide** topic —
+  `development.md`, `contributing/index.md`, `contributing/channels.md`,
+  `contributing/animations.md` — holds the architecture and all internals.
   Put user-visible behavior on the user page, implementation on the
-  Contributing page, and cross-link between them.
-- Update the relevant page(s) under `docs/` — see
-  [Documentation (GitHub Pages)](#documentation-github-pages) above for how
-  navigation/front matter works when adding a new page.
+  developer page, and cross-link between them (relative `.md` links).
+- Update the relevant page(s) under `docs/src/content/docs/` — see
+  [Documentation (GitHub Pages)](#documentation-github-pages) above for
+  frontmatter and how to register a new page in a topic sidebar.
 - If a change only affects internal implementation with no user- or
   contributor-visible behavior change, no doc update is needed — don't pad
   docs with internal detail no one reading them would act on.

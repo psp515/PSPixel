@@ -1,0 +1,21 @@
+/* PSPixel — accent tuned to the landing page + web installer (#6ea8fe). */
+
+:root {
+  --sl-color-accent-low: #16324f;
+  --sl-color-accent: #3b7fd4;
+  --sl-color-accent-high: #bcd6f7;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #d6e6fb;
+  --sl-color-accent: #2f6fc0;
+  --sl-color-accent-high: #17385f;
+}
+
+/* Nudge the dark theme's neutrals toward the same blue-black as the landing
+   page so the two don't clash when you cross between them. */
+:root {
+  --sl-color-bg: #12151a;
+  --sl-color-bg-nav: #14171d;
+  --sl-color-bg-sidebar: #14171d;
+}

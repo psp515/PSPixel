@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { OWNER, REPO, DEFAULT_FIRMWARE_URL, apiUrl, rawUrl } from "../../docs/installer/const.js";
+import { OWNER, REPO, DEFAULT_FIRMWARE_URL, apiUrl, rawUrl } from "../../docs/public/installer/const.js";
 
 test("apiUrl builds repo-scoped GitHub API URLs", () => {
   assert.equal(apiUrl("tags?per_page=100"), `https://api.github.com/repos/${OWNER}/${REPO}/tags?per_page=100`);

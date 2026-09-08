@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { splitB64 } from "../../docs/installer/repl.js";
+import { splitB64 } from "../../docs/public/installer/repl.js";
 
 function randomBytes(n) {
   const out = new Uint8Array(n);

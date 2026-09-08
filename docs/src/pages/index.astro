@@ -1,0 +1,385 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PSPixel — MicroPython ARGB LED controller</title>
+  <meta
+    name="description"
+    content="PSPixel turns a Raspberry Pi Pico W and a WS2812B strip into a smart light driven by the enclosure button, MQTT, or a browser dashboard."
+  />
+  <link rel="icon" href={`${base}/favicon.svg`} />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+  />
+
+  <style is:global>
+    /* Single-world "device panel / signal" look, matched to the docs theme
+       and the web installer. Every colour is painted explicitly so the page
+       holds on any host ground. */
+    :root {
+      color-scheme: dark;
+
+      --ground: #12151a;
+      --ground-2: #15181e;
+      --panel: #1b1f27;
+      --edge: #2b313c;
+      --edge-soft: #232833;
+      --ink: #e7e9ee;
+      --ink-dim: #c2c7d2;
+      --muted: #929cb0;
+      --accent: #6ea8fe;
+
+      --maxw: 960px;
+      --step-0: 0.78rem;
+      --step-1: 0.92rem;
+      --step-2: 1.05rem;
+
+      --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+      --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(720px 340px at 22% 12%, rgba(110, 168, 254, 0.1), transparent 70%),
+        var(--ground);
+      color: var(--ink);
+      font: 400 16px/1.6 var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent); }
+
+    .wrap {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: clamp(2.5rem, 6vw, 5rem) clamp(1.1rem, 4vw, 2rem) 3rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 1rem;
+      font: 500 var(--step-0)/1 var(--mono);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .hero {
+      display: grid;
+      gap: clamp(1.5rem, 4vw, 2.75rem);
+      align-items: center;
+    }
+
+    @media (min-width: 760px) {
+      .hero { grid-template-columns: 0.9fr 1.1fr; }
+    }
+
+    .device {
+      position: relative;
+      border: 1px solid var(--edge);
+      border-radius: 16px;
+      background:
+        radial-gradient(340px 200px at 50% 40%, rgba(124, 92, 245, 0.12), transparent 75%),
+        linear-gradient(180deg, var(--panel), var(--ground-2));
+      padding: 1.5rem 1.5rem 1.25rem;
+    }
+
+    .device svg { display: block; width: 100%; height: auto; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 1.1rem;
+    }
+
+    .chip {
+      font: 400 0.68rem/1 var(--mono);
+      letter-spacing: 0.02em;
+      color: var(--muted);
+      border: 1px solid var(--edge-soft);
+      border-radius: 999px;
+      padding: 0.4rem 0.6rem;
+    }
+    .chip b { color: var(--ink-dim); font-weight: 500; }
+
+    .lead-block { min-width: 0; }
+
+    h1 {
+      margin: 0 0 0.7rem;
+      font-size: clamp(2.1rem, 5.4vw, 3.15rem);
+      font-weight: 600;
+      letter-spacing: -0.022em;
+      line-height: 1.04;
+      text-wrap: balance;
+    }
+
+    .lead {
+      margin: 0 0 1.1rem;
+      max-width: 46ch;
+      color: var(--ink-dim);
+    }
+
+    .does {
+      margin: 0;
+      font: 400 var(--step-0)/1.9 var(--mono);
+      color: var(--muted);
+    }
+    .does span { color: var(--edge); padding: 0 0.15rem; }
+
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: clamp(2.5rem, 6vw, 3.75rem) 0 1.25rem;
+      font: 500 var(--step-0)/1 var(--mono);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .rule::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--edge-soft);
+    }
+
+    .grid {
+      display: grid;
+      gap: 0.85rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 620px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      min-height: 100%;
+      padding: 1.3rem 1.35rem 1.2rem;
+      border: 1px solid var(--edge);
+      border-radius: 13px;
+      background: linear-gradient(180deg, var(--ground-2), var(--ground));
+      color: inherit;
+      text-decoration: none;
+      transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #1a2028, var(--ground-2));
+      transform: translateY(-2px);
+    }
+    .card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .card .ic { width: 26px; height: 26px; color: var(--accent); }
+    .card .ic svg { width: 100%; height: 100%; display: block; }
+
+    .card h3 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: var(--step-2);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: var(--step-1);
+      color: var(--muted);
+    }
+
+    .card .meta {
+      margin-top: auto;
+      padding-top: 0.55rem;
+      font: 400 0.68rem/1 var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edge);
+    }
+    .card:hover .meta { color: var(--muted); }
+
+    .card .arrow { transition: transform 0.16s ease; }
+    .card:hover .arrow { transform: translateX(3px); }
+
+    footer {
+      margin-top: 3rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--edge-soft);
+      font: 400 var(--step-0)/1.7 var(--mono);
+      color: var(--muted);
+    }
+    footer a { color: var(--muted); text-underline-offset: 2px; }
+    footer a:hover { color: var(--ink-dim); }
+
+    .led-dot {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulse 3.4s ease-in-out infinite;
+    }
+    .led-dot:nth-of-type(1) { animation-delay: 0s; }
+    .led-dot:nth-of-type(2) { animation-delay: 0.5s; }
+    .led-dot:nth-of-type(3) { animation-delay: 1s; }
+    .led-dot:nth-of-type(4) { animation-delay: 1.5s; }
+    .led-dot:nth-of-type(5) { animation-delay: 2s; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: scale(0.86); }
+      45% { opacity: 1; transform: scale(1.12); }
+    }
+
+    .signal-trace {
+      stroke-dasharray: 46 320;
+      animation: travel 5.5s linear infinite;
+    }
+    @keyframes travel {
+      from { stroke-dashoffset: 366; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .led-dot { animation: none; opacity: 1; transform: none; }
+      .signal-trace { animation: none; opacity: 0.35; }
+      .card, .card .arrow { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="eyebrow">MicroPython · Raspberry Pi Pico W</p>
+
+    <section class="hero">
+      <div class="device" aria-hidden="true">
+        <svg viewBox="0 0 400 132" role="img">
+          <defs>
+            <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#3b82f6"></stop>
+              <stop offset="0.28" stop-color="#7c5cf5"></stop>
+              <stop offset="0.5" stop-color="#b34ce0"></stop>
+              <stop offset="0.72" stop-color="#e0529f"></stop>
+              <stop offset="1" stop-color="#f2874a"></stop>
+            </linearGradient>
+            <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="3.4" result="b"></feGaussianBlur>
+              <feMerge>
+                <feMergeNode in="b"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <path
+            d="M20,66 C 55,66 75,30 110,30 C 145,30 165,102 200,102 C 235,102 255,30 290,30 C 325,30 345,66 380,66"
+            fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3" stroke-linecap="round"></path>
+          <path class="signal-trace"
+            d="M20,66 C 55,66 75,30 110,30 C 145,30 165,102 200,102 C 235,102 255,30 290,30 C 325,30 345,66 380,66"
+            fill="none" stroke="url(#wave)" stroke-width="3" stroke-linecap="round"></path>
+
+          <g filter="url(#glow)">
+            <circle class="led-dot" cx="20" cy="66" r="5" fill="#3b82f6"></circle>
+            <circle class="led-dot" cx="110" cy="30" r="5.6" fill="#7c5cf5"></circle>
+            <circle class="led-dot" cx="200" cy="102" r="5" fill="#b34ce0"></circle>
+            <circle class="led-dot" cx="290" cy="30" r="5.6" fill="#e0529f"></circle>
+            <circle class="led-dot" cx="380" cy="66" r="5" fill="#f2874a"></circle>
+          </g>
+        </svg>
+
+        <div class="chips">
+          <span class="chip"><b>WS2812B</b> · 5&nbsp;V</span>
+          <span class="chip">button · MQTT · web</span>
+        </div>
+      </div>
+
+      <div class="lead-block">
+        <h1>PSPixel</h1>
+        <p class="lead">
+          Turns a Raspberry&nbsp;Pi Pico&nbsp;W and a WS2812B strip into a smart light you
+          drive from the enclosure button or over MQTT, with a browser dashboard for setup.
+          Mode, brightness and on/off state all survive a power cycle, and it posts a
+          retained “offline” message over MQTT when it drops.
+        </p>
+        <p class="does">
+          on / off <span>·</span> static colour <span>·</span> rainbow <span>·</span>
+          running lights <span>·</span> segment repeat <span>·</span> brightness &amp; speed
+        </p>
+      </div>
+    </section>
+
+    <p class="rule">Start here</p>
+
+    <nav class="grid">
+      <a class="card" href={`${base}/setup/`}>
+        <span class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v15.5H5.5A1.5 1.5 0 0 1 4 18z"></path>
+            <path d="M4 18.5A1.5 1.5 0 0 1 5.5 17H19"></path>
+            <path d="M9 8h6M9 11h4"></path>
+          </svg>
+        </span>
+        <h3>Documentation <span class="arrow" aria-hidden="true">→</span></h3>
+        <p>How to wire it, the control channels, and every lighting mode with its shared controls.</p>
+        <span class="meta">setup · channels · animations</span>
+      </a>
+
+      <a class="card" href={`${base}/installer/`}>
+        <span class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2.5"></rect>
+            <path d="M12 8.5v5.5m0 0 2.4-2.4M12 14l-2.4-2.4"></path>
+            <path d="M8.5 17h7"></path>
+          </svg>
+        </span>
+        <h3>Web installer <span class="arrow" aria-hidden="true">→</span></h3>
+        <p>Flash MicroPython and install the controller onto a blank Pico&nbsp;W straight from the browser.</p>
+        <span class="meta">Chrome · Edge · Opera</span>
+      </a>
+
+      <a class="card" href={`${base}/development/`}>
+        <span class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 8-4 4 4 4M15 8l4 4-4 4"></path>
+            <path d="M13.5 6 10.5 18"></path>
+          </svg>
+        </span>
+        <h3>Developer guide <span class="arrow" aria-hidden="true">→</span></h3>
+        <p>The architecture, dev-environment setup, and how to add a new channel or lighting mode.</p>
+        <span class="meta">contributing · development</span>
+      </a>
+
+      <a class="card" href="https://github.com/psp515/PSPixel">
+        <span class="ic">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.85 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.5-1.11-1.5-.9-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.35 9.35 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.79-4.57 5.04.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"></path>
+          </svg>
+        </span>
+        <h3>GitHub <span class="arrow" aria-hidden="true">→</span></h3>
+        <p>Source, issue tracker and releases — plus the config reference in the developer docs.</p>
+        <span class="meta">psp515/PSPixel</span>
+      </a>
+    </nav>
+
+    <footer>
+      MicroPython ARGB LED controller for the Raspberry&nbsp;Pi Pico&nbsp;W.<br />
+      <a href="https://github.com/psp515/PSPixel">psp515/PSPixel</a>
+    </footer>
+  </main>
+</body>
+</html>

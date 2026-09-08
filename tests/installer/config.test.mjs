@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
 
-import { configJson } from "../../docs/installer/repl.js";
+import { configJson } from "../../docs/public/installer/repl.js";
 
 const SAMPLE_FORM = {
   deviceName: "Pico",
@@ -11,7 +11,7 @@ const SAMPLE_FORM = {
   ledCount: 60,
   ledPin: 0,
   watchdog: true,
-  apSsid: "PicoController",
+  apSsid: "PSPixel",
   apPassword: "Pico123456!",
   ledsOnAfterBoot: true,
   segmentingEnabled: false,

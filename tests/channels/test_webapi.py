@@ -276,6 +276,24 @@ def test_certificate_upload_rejects_path_separator_in_name(tmp_path, monkeypatch
     asyncio.run(scenario())
 
 
+def test_certificate_upload_rejects_dotdot_and_tricky_names(tmp_path, monkeypatch):
+    monkeypatch.setattr(webapi_module, "CERTS_DIR", str(tmp_path))
+
+    async def scenario():
+        state = StateManager({})
+        logger = Logger(state)
+        channel = WebApiChannel(state, logger)
+
+        for name in ("..", ".", "ca pem", "café.pem", "x" * 65):
+            result = await channel._handle_certificate_upload(
+                FakeUploadRequest(name, b"cert bytes")
+            )
+            assert result == ({"error": "invalid filename"}, 400)
+        assert list(tmp_path.iterdir()) == []
+
+    asyncio.run(scenario())
+
+
 def test_certificate_upload_rejects_empty_body(tmp_path, monkeypatch):
     monkeypatch.setattr(webapi_module, "CERTS_DIR", str(tmp_path))
 

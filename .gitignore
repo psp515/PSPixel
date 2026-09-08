@@ -131,11 +131,10 @@ cython_debug/
 
 /config.dev.json
 
-# Jekyll (docs/)
-docs/_site/
-docs/.jekyll-cache/
-docs/.sass-cache/
-docs/Gemfile.lock
+# Astro docs site (docs/)
+docs/node_modules/
+docs/dist/
+docs/.astro/
 .claude/settings.json
 
 helpers/release/

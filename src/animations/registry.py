@@ -4,6 +4,7 @@ from animations.static import Static
 from animations.blink import Blink
 from animations.rainbow import Rainbow
 from animations.runner import Runner
+from animations.pspixel import PSPixel
 
 MODES = {
     "off": Off,
@@ -12,4 +13,5 @@ MODES = {
     "blink": Blink,
     "rainbow": Rainbow,
     "runner": Runner,
+    "pspixel": PSPixel,
 }

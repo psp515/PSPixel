@@ -21,6 +21,7 @@ DEFAULTS = {
         "blink": {},
         "rainbow": {},
         "runner": {"length": 5},
+        "pspixel": {"trails": 2, "length": 10, "dot_size": 0},
     },
     "network": {
         "wifi": {"ssid": "", "password": ""},

@@ -8,7 +8,7 @@ what each mode looks like and the user-facing controls, see
 [Animations](../animations/index.md).
 
 An **animation** is one lighting mode — `off`, `white`, `static`, `blink`,
-`rainbow`, `runner`. The `Renderer` (`src/renderer.py`) owns a single
+`rainbow`, `runner`, `pspixel`. The `Renderer` (`src/renderer.py`) owns a single
 `uasyncio` loop that
 picks the active animation, calls its `render()` once per frame, and writes the
 result to the NeoPixel strip. Modes never touch `neopixel`/hardware themselves;
@@ -92,10 +92,38 @@ Registered in `src/animations/registry.py`:
 | `blink` | `blink.py` | — | No | No | Flashes `mode.color` fully on, then fully off, alternating every `interval_ms`; `mode.speed` sets the half-period between `BLINK_MIN_MS` (100) and `BLINK_MAX_MS` (600) |
 | `rainbow` | `rainbow.py` | — | **Yes** | Yes | Precomputes a 256-step color wheel once; wipes the first rainbow frame in on startup, then scrolls it using `mode.speed` |
 | `runner` | `runner.py` | `length` | No | Yes | Trail of `length` pixels in `mode.color` chasing around the strip, brightest in the middle and fading to black at both ends; enters cleanly from the start of the strip. Renders at a fixed 30 ms frame rate with a sub-pixel (fixed-point) head position; `mode.speed` sets travel speed in LEDs/second |
+| `pspixel` | `pspixel.py` | `trails`, `length`, `dot_size` | No | Yes | Logo animation: a fixed blue→orange palette gradient dimmed to `BASE_SCALE` (32/256) as a base layer, five pulsing anchor dots in the logo colors, and `trails` comets running along the strip. `mode.color` is ignored. Renders at a fixed 30 ms with a sub-pixel head like `runner` |
 
 `off`/`white`/`static`/`blink` opt out of segmenting because segmenting a solid
 fill produces the exact same output as rendering it across the whole strip.
-`runner` opts out because its trail is meant to travel the full strip.
+`runner` and `pspixel` opt out because their trails are meant to travel the
+full strip, and `pspixel`'s anchor dots mark the two ends of it.
+
+### `pspixel` internals
+
+`src/animations/pspixel.py`. Everything that depends on `count` is built once
+on the first `render()` call (`_prepare`), since `count` is stable for an
+instance's lifetime:
+
+- `_base` — a `count * 3` bytearray holding the palette gradient scaled to
+  `BASE_SCALE`, copied into the frame buffer with one slice assignment each
+  frame so `render()` allocates nothing.
+- `_anchors` — the five dot centers, at `i * (count - 1) // 4`. The first and
+  last land on LED `0` and LED `count - 1`, so their outer halves fall off the
+  strip and they render as half dots — no special-casing.
+- `_radius` — `dot_size // 2`, with `dot_size` falling back to
+  `max(DOT_MIN, count // DOT_DIVISOR)` (3, 20) when the param is `0`. Dot
+  pixels are scaled by a linear falloff from the center.
+- `_gap` — the fixed-point spacing between comet heads, `count * 256 // trails`.
+
+`_pulse` is a 64-entry brightness LUT built in `__init__` (eased triangle,
+`PULSE_MIN`..255), advanced by `frame * PULSE_RATE >> 8` and offset per anchor
+by `PULSE_PHASE` steps, which gives the staggered breathing of the logo dots.
+Comets reuse `runner`'s trail shape — brightest at the middle of the trail,
+fading to nothing at both ends — and take their color from the palette
+gradient sampled at the head position (`_sample`, into a preallocated
+`_tmp` list). Dots and comets are written over the base with `_blend`, an
+additive write clamped to 255.
 
 ## Brightness and speed
 
@@ -113,6 +141,7 @@ Both are global `mode` fields, shared by all modes, and both are clamped to
 | `runner` | LEDs per second | `10` ≈ 14 s per lap of a 144-LED strip; `100` sweeps it in ~1.4 s |
 | `rainbow` | color-wheel steps (of 256) per 40 ms frame | `10` ≈ one full color cycle per second; `100` ≈ 10 cycles/s |
 | `blink` | inverse half-period, `interval_ms = max(100, 600 - speed * 5)` | `10` ≈ 0.9 Hz; `100` ≈ 5 Hz (floored at the 100 ms minimum) |
+| `pspixel` | LEDs per second | Same scale as `runner`; the anchor pulse is independent of `speed` |
 | `off`, `white`, `static` | unused | — |
 
 Changing either field rebuilds the animation instance without resetting
@@ -238,6 +267,7 @@ MODES = {
     "static": Static,
     "rainbow": Rainbow,
     "runner": Runner,
+    "pspixel": PSPixel,
     "mymode": MyMode,
 }
 ```

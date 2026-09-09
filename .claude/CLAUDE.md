@@ -44,6 +44,7 @@ PSPixel — a MicroPython ARGB LED controller. (The GitHub repo slug stays
   - static color mode
   - rainbow effect
   - running few leds around the LEDS
+  - pspixel mode - the project logo on the strip (gradient base, five pulsing dots, running comets)
 - on / off function for device LEDS
 
 ### Future directions

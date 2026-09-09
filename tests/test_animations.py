@@ -1,5 +1,6 @@
 from animations.base import WIPE_INTERVAL_MS
 from animations.blink import BLINK_MIN_MS, Blink
+from animations.pspixel import PSPixel
 from animations.rainbow import Rainbow
 from animations.runner import Runner
 from animations.static import Static
@@ -24,6 +25,7 @@ def make_mode(color=None, brightness=100, speed=10):
                 "blink": {},
                 "rainbow": {},
                 "runner": {"length": 5},
+                "pspixel": {},
             },
         }
     )
@@ -181,3 +183,106 @@ def test_runner_wraps_after_first_pass():
 
     assert any(buffer[0:3])
     assert any(buffer[-3:])
+
+
+def pspixel_levels(anim, count, frame):
+    buffer = bytearray(count * 3)
+    anim.render(buffer, count, frame)
+    return [sum(buffer[i * 3 : i * 3 + 3]) for i in range(count)]
+
+
+def test_pspixel_dot_width_scales_with_strip_length():
+    mode = make_mode(speed=100)
+    anim = PSPixel(mode, {"trails": 1, "length": 6})
+
+    levels = pspixel_levels(anim, 100, 0)
+
+    assert levels[49] > levels[48] > levels[47] > levels[46]
+    assert levels[51] < levels[50] < levels[49]
+    assert levels[52] < levels[51]
+
+
+def test_pspixel_edge_anchors_are_half_dots():
+    mode = make_mode(speed=100)
+    anim = PSPixel(mode, {"trails": 1, "length": 6})
+
+    levels = pspixel_levels(anim, 100, 10)
+
+    assert levels[0] > levels[1] > levels[2] > levels[3]
+    assert levels[99] > levels[98] > levels[97] > levels[96]
+
+
+def test_pspixel_comet_is_dim_at_both_ends():
+    mode = make_mode(speed=100)
+    anim = PSPixel(mode, {"trails": 1, "length": 6})
+
+    levels = pspixel_levels(anim, 60, 2)
+
+    assert levels[3] == max(levels[2:7])
+    assert levels[2] > levels[6]
+    assert levels[5] > levels[6]
+    assert levels[4] > levels[5]
+
+
+def test_pspixel_trails_param_spreads_comets_around_strip():
+    mode = make_mode(speed=100)
+    one = PSPixel(mode, {"trails": 1, "length": 6})
+    two = PSPixel(mode, {"trails": 2, "length": 6})
+
+    single = pspixel_levels(one, 60, 2)
+    double = pspixel_levels(two, 60, 2)
+
+    assert double[33] > single[33]
+    assert double[3] == single[3]
+
+
+def test_pspixel_comet_moves_between_frames():
+    mode = make_mode(speed=100)
+    anim = PSPixel(mode, {"trails": 1, "length": 6})
+
+    first = pspixel_levels(anim, 60, 2)
+    second = pspixel_levels(anim, 60, 3)
+
+    assert first != second
+
+
+def test_pspixel_anchors_pulse_over_time():
+    mode = make_mode(speed=100)
+    anim = PSPixel(mode, {"trails": 1, "length": 6})
+
+    first = pspixel_levels(anim, 60, 0)
+    later = pspixel_levels(anim, 60, 20)
+
+    assert first[29] != later[29]
+
+
+def test_pspixel_ignores_mode_color():
+    warm = PSPixel(make_mode(color=[255, 0, 0], speed=100), {"trails": 1, "length": 6})
+    cold = PSPixel(make_mode(color=[0, 0, 255], speed=100), {"trails": 1, "length": 6})
+
+    assert pspixel_levels(warm, 60, 2) == pspixel_levels(cold, 60, 2)
+
+
+def test_pspixel_applies_brightness():
+    full = PSPixel(make_mode(brightness=100, speed=100), {"trails": 1, "length": 6})
+    dim = PSPixel(make_mode(brightness=20, speed=100), {"trails": 1, "length": 6})
+
+    assert sum(pspixel_levels(dim, 60, 2)) < sum(pspixel_levels(full, 60, 2))
+
+
+def test_pspixel_default_params_render_whole_strip():
+    mode = make_mode(speed=100)
+    anim = PSPixel(mode, mode.params("pspixel"))
+
+    levels = pspixel_levels(anim, 144, 5)
+
+    assert all(level > 0 for level in levels)
+    assert anim.segmenting_compatible is False
+
+
+def test_pspixel_registered_with_defaults():
+    from animations.registry import MODES
+    from defaults import DEFAULTS
+
+    assert MODES["pspixel"] is PSPixel
+    assert DEFAULTS["modes"]["pspixel"] == {"trails": 2, "length": 10, "dot_size": 0}

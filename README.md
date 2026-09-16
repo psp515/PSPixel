@@ -9,7 +9,7 @@
     <a href="https://github.com/psp515/PSPixel/actions/workflows/ci.yml">
       <img src="https://img.shields.io/github/actions/workflow/status/psp515/PSPixel/ci.yml?branch=main&label=CI" alt="CI status" />
     </a>
-    <a href="https://psp515.github.io/PSPixel/">
+    <a href="https://psp515.com/pspixel/">
       <img src="https://img.shields.io/github/deployments/psp515/PSPixel/github-pages?label=docs" alt="docs" />
     </a>
     <a href="">
@@ -59,13 +59,13 @@ Pick whichever control method's convenient — they both work at the same time a
 
 ## Documentation
 
-Full docs live at **[psp515.github.io/PSPixel](https://psp515.github.io/PSPixel/)** (built with Astro + Starlight). They're split into a plain-language **user guide** and a **developer guide**, each with its own sidebar:
+Full docs live at **[psp515.com/pspixel](https://psp515.com/pspixel/)** (built with Astro + Starlight). They're split into a plain-language **user guide** and a **developer guide**, each with its own sidebar:
 
-- [Web installer](https://psp515.github.io/PSPixel/installer/) — flash MicroPython and install the controller onto a Pico W from the browser (Chrome/Edge/Opera)
-- [Manual setup](https://psp515.github.io/PSPixel/setup/) — the by-hand version: wiring, flashing MicroPython, copying the project on, and configuring it
-- [Channels](https://psp515.github.io/PSPixel/channels/) — the ways to control it (button and MQTT)
-- [Animations](https://psp515.github.io/PSPixel/animations/) — the lighting modes and their shared controls
-- [Developer guide](https://psp515.github.io/PSPixel/development/) — architecture, dev-environment setup, the config file, and how to add a new channel or mode
+- [Web installer](https://psp515.com/pspixel/installer/) — flash MicroPython and install the controller onto a Pico W from the browser (Chrome/Edge/Opera)
+- [Manual setup](https://psp515.com/pspixel/setup/) — the by-hand version: wiring, flashing MicroPython, copying the project on, and configuring it
+- [Channels](https://psp515.com/pspixel/channels/) — the ways to control it (button and MQTT)
+- [Animations](https://psp515.com/pspixel/animations/) — the lighting modes and their shared controls
+- [Developer guide](https://psp515.com/pspixel/development/) — architecture, dev-environment setup, the config file, and how to add a new channel or mode
 
 ## Contributing
 
@@ -75,7 +75,7 @@ channel you'd like to add:
 
 - ⭐ **Star** the repo if you find it useful — it helps others find it too.
 - 🐛 Open an [issue](https://github.com/psp515/PSPixel/issues) for bugs or feature requests.
-- 🔀 Fork it and send a pull request — the [Contributing docs](https://psp515.github.io/PSPixel/contributing/) cover how the pieces fit together and how to add a new channel or mode without touching the core loop.
+- 🔀 Fork it and send a pull request — the [Contributing docs](https://psp515.com/pspixel/contributing/) cover how the pieces fit together and how to add a new channel or mode without touching the core loop.
 
 ## License
 

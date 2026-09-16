@@ -5,12 +5,12 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightSidebarTopics from "starlight-sidebar-topics";
 
-const BASE = "/PSPixel";
+const BASE = "/pspixel";
 const DOCS_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "src/content/docs");
 
 // Astro (7.x) resolves relative links to sibling `.md` files, but drops the
 // `#fragment` and leaves fragment-bearing links unresolved. Do the rewrite
-// ourselves: `../foo.md#bar` -> `/PSPixel/foo/#bar`.
+// ourselves: `../foo.md#bar` -> `/pspixel/foo/#bar`.
 function rehypeDocLinks() {
   return (tree, file) => {
     const fromDir = dirname(file.path);
@@ -34,7 +34,7 @@ function rehypeDocLinks() {
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://psp515.github.io",
+  site: "https://psp515.com",
   base: BASE,
   markdown: { rehypePlugins: [rehypeDocLinks] },
   integrations: [

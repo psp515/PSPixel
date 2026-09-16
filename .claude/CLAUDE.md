@@ -251,7 +251,7 @@ runs on CPython/Node, not on-device.
 ## Web installer
 
 - Browser-based flash + install for a blank Pico W, served from GitHub Pages at
-  `…/PSPixel/installer/`. The app lives in `docs/public/installer/`
+  `…/pspixel/installer/`. The app lives in `docs/public/installer/`
   (plain static HTML/JS in the Astro site's `public/`, copied verbatim,
   outside Starlight — linked from the `web-installer` doc page). Chromium
   desktop only (WebUSB + Web Serial).
@@ -318,7 +318,7 @@ runs on CPython/Node, not on-device.
 ## Documentation (GitHub Pages)
 
 - `docs/` is an **Astro + Starlight** project (`docs/astro.config.mjs`,
-  `docs/package.json`). `site: https://psp515.github.io`, `base: /PSPixel`.
+  `docs/package.json`). `site: https://psp515.com`, `base: /pspixel`.
   Published by **GitHub Actions** (`.github/workflows/deploy-docs.yml`,
   `withastro/action` → `actions/deploy-pages`) on push to `main` touching
   `docs/**`. The repo's Pages source must be set to "GitHub Actions" in
@@ -329,7 +329,7 @@ runs on CPython/Node, not on-device.
   npm install
   npm run dev
   ```
-  then open http://localhost:4321/PSPixel/. `npm run build` for a
+  then open http://localhost:4321/pspixel/. `npm run build` for a
   production build.
 - **Content** is Markdown in `docs/src/content/docs/` — one Starlight
   collection. Frontmatter is `title` + `description` (Starlight renders the
@@ -351,7 +351,7 @@ runs on CPython/Node, not on-device.
   palette in step with the web installer (`docs/public/installer/style.css`).
   Card links use `import.meta.env.BASE_URL`.
 - The **web installer app** is static files in `docs/public/installer/`,
-  served verbatim at `…/PSPixel/installer/` (see the Web installer section
+  served verbatim at `…/pspixel/installer/` (see the Web installer section
   above). Never a Starlight page. `astro dev` does not serve `index.html`
   for a bare `public/` directory URL — in dev open `…/installer/index.html`;
   `npm run preview` and the deployed site serve `…/installer/` directly.

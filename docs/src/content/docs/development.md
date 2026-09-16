@@ -317,7 +317,7 @@ npm run dev
 The installer lives in `docs/public/installer/`, served verbatim outside
 Starlight. Astro's **dev server** does not serve `index.html` for a bare
 directory request on a `public/` path, so during `npm run dev` open
-`http://localhost:4321/PSPixel/installer/index.html` (not the bare
+`http://localhost:4321/pspixel/installer/index.html` (not the bare
 `…/installer/`). `npm run build && npm run preview` and the deployed site
 both serve `…/installer/` directly — this only affects `astro dev`.
 

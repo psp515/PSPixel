@@ -38,7 +38,7 @@ Fill in the `mqtt` section of `config.json`:
 | `mqtt.ssl` | `false` | Encrypt the connection (see [Secure connections](#secure-connections)). |
 | `mqtt.certificate.validate` | `false` | Also verify the broker's identity (see [Secure connections](#secure-connections)). |
 | `mqtt.certificate.name` | `""` | Filename of your CA certificate, stored in `certs/` on the device. |
-| `mqtt.ntp_host` | `pool.ntp.org` | Time server, used only for secure connections. |
+| `mqtt.ntp_host` | `pool.ntp.org` | Time server, used only for secure connections with certificate validation on. |
 
 Changes take effect right away — the device reconnects with the new settings,
 no reboot.
@@ -143,8 +143,9 @@ connection — it fails safe. A couple of practical notes:
 
 - `mqtt.server` must be a **hostname**, not a bare IP address — certificates
   are issued for names, not IPs.
-- Secure connections need the correct time, so the device syncs its clock from
-  `mqtt.ntp_host` before connecting.
+- Checking the broker's certificate needs the correct time, so with
+  certificate validation on the device syncs its clock from `mqtt.ntp_host`
+  before connecting. Without validation the time server isn't contacted.
 
 ## Online / offline status
 

@@ -278,10 +278,11 @@ project rule of never using the blocking `umqtt.simple`/`umqtt.robust` clients.
 - **`machine.unique_id()` must be available** — it's hex-encoded into
   `client_id` (`StateManager.device_id`) so multiple devices on the same broker
   don't collide.
-- **NTP reachability if `mqtt.ssl: true`.** TLS needs a correct clock for
-  certificate validation, so `_sync_time()` runs once against `mqtt.ntp_host`
-  before the first connect attempt, retrying every `NTP_RETRY_MS` until it
-  succeeds.
+- **NTP reachability if `mqtt.ssl` and `mqtt.certificate.validate` are both
+  true.** Certificate validation needs a correct clock, so `_sync_time()` runs
+  once against `mqtt.ntp_host` before the first connect attempt, retrying
+  every `NTP_RETRY_MS` until it succeeds. TLS without validation skips it
+  (`_needs_clock()`), so an unreachable time server can't block the session.
 - **Reconnection is `mqtt_as`'s job, not ours.** The channel doesn't implement
   its own reconnect loop for an established session — it awaits `client.up`,
   which `mqtt_as` sets/clears internally, and just re-subscribes and
@@ -303,7 +304,8 @@ per set of `mqtt`/`network` config. Each session, in order:
    the reason and wait until the `mqtt`/`network` section changes.
 2. Wait for `runtime.network.wifi.connected`.
 3. Read `mqtt.base_topic`.
-4. If `mqtt.ssl` is true, sync the clock over NTP, retrying until it works.
+4. If `mqtt.ssl` and `mqtt.certificate.validate` are both true, sync the
+   clock over NTP, retrying until it works.
 5. Build the `mqtt_as` client from config (`_build_client`).
 6. Attempt `client.connect()`, retrying every `RETRY_MS` on failure.
 7. Launch three background tasks for the rest of the session:
@@ -473,7 +475,7 @@ that derives the topic strings from `base_topic` + single-topic mode, and
 | `stop()` | Channel lifecycle | Ends the current session: cancels the background tasks, publishes `"offline"`, closes the client |
 | `_session()` | Session state machine | Five-step story: wait-if-disabled, initialize, connect, start tasks, wait for restart |
 | `_wait_if_disabled()` | Session state machine | If `_disabled_reason()` is set, logs it and waits for a restart |
-| `_initialize_session()` | Session state machine | Waits for Wi-Fi, loads topic config, runs the NTP sync when TLS is on, builds the client |
+| `_initialize_session()` | Session state machine | Waits for Wi-Fi, loads topic config, runs the NTP sync when certificate validation is on, builds the client |
 | `_connect_with_retries()` | Session state machine | `client.connect()` retry loop; returns `True` once connected, `False` if a restart interrupts it |
 | `_start_session_tasks()` | Session state machine | Spawns the three background tasks |
 | `_teardown()` | Session state machine | Cancels the session's tasks, publishes `"offline"` (retained), closes the client |
@@ -486,7 +488,7 @@ that derives the topic strings from `base_topic` + single-topic mode, and
 | `_certificate_disabled_reason()` | Enablement | Checks the certificate is usable when `mqtt.ssl` and `mqtt.certificate.validate` are both true |
 | `_wait_for_wifi_connected()` | Connection setup | Polls `runtime.network.wifi.connected` until up |
 | `_load_topic_config()` | Connection setup | Reads `base_topic`/single-topic mode into a fresh `MqttTopics` |
-| `_sync_time_with_retries()` / `_sync_time()` | Connection setup | NTP clock sync (needed for TLS) |
+| `_sync_time_with_retries()` / `_sync_time()` | Connection setup | NTP clock sync (needed for certificate validation) |
 | `_build_client()` | Connection setup | Builds the `mqtt_as` config dict and `MQTTClient` instance from `state` |
 | `_handle_up()` | Background tasks | Re-subscribes and re-announces online status after every connect/reconnect |
 | `_handle_messages()` | Background tasks | Parses incoming JSON, filters it through the allow-list, applies it to `state` |

@@ -340,6 +340,38 @@ def test_session_disabled_without_server_wakes_on_restart():
     asyncio.run(run())
 
 
+def _run_initialize_session(data):
+    channel, _ = make_channel(data)
+    ntp_calls = []
+    channel._sync_time = lambda: ntp_calls.append(True) or True
+    channel._build_client = lambda: FakeClient()
+    channel._running = True
+    result = asyncio.run(channel._initialize_session())
+    return result, ntp_calls
+
+
+def test_initialize_session_skips_ntp_when_ssl_without_certificate_validation():
+    result, ntp_calls = _run_initialize_session(
+        {
+            "mqtt": {"server": "b", "ssl": True, "certificate": {"validate": False}},
+            "runtime": {"network": {"wifi": {"connected": True}}},
+        }
+    )
+    assert result is True
+    assert ntp_calls == []
+
+
+def test_initialize_session_syncs_ntp_when_certificate_validation_on():
+    result, ntp_calls = _run_initialize_session(
+        {
+            "mqtt": {"server": "b", "ssl": True, "certificate": {"validate": True, "name": "c.pem"}},
+            "runtime": {"network": {"wifi": {"connected": True}}},
+        }
+    )
+    assert result is True
+    assert ntp_calls == [True]
+
+
 def test_disabled_reason_covers_enabled_server_and_wifi():
     channel, _ = make_channel(
         {"mqtt": {"enabled": False, "server": "b"}, "network": {"wifi": {"ssid": "x"}}}

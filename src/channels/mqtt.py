@@ -108,7 +108,7 @@ class MqttChannel(Channel):
         if not self._session_alive():
             return False
         self._load_topic_config()
-        if self.state.get("mqtt", "ssl", default=False) and not await self._sync_time_with_retries():
+        if self._needs_clock() and not await self._sync_time_with_retries():
             return False
         self._client = self._build_client()
         return True
@@ -220,6 +220,12 @@ class MqttChannel(Channel):
         base = self.state.get("mqtt", "base_topic", default="")
         single = self.state.get("mqtt", "use_single_topic_for_state_update", default=False)
         self._topics = MqttTopics(base, single)
+
+    def _needs_clock(self):
+        return bool(
+            self.state.get("mqtt", "ssl", default=False)
+            and self.state.get("mqtt", "certificate", "validate", default=False)
+        )
 
     async def _sync_time_with_retries(self):
         while self._session_alive() and not self._sync_time():
